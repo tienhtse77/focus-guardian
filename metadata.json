@@ -1,0 +1,5 @@
+{
+  "name": "Focus Guardian",
+  "description": "A productivity tool to manage distracting websites. Configure a 'blacklist' of domains and a 'greenlist' of productive links or tasks. When you attempt to access a blacklisted site, you'll be reminded of your productive goals instead.",
+  "requestFramePermissions": []
+}
