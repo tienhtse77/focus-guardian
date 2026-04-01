@@ -1,0 +1,38 @@
+{
+    "manifest_version": 3,
+    "name": "Focus Guardian (Dev)",
+    "version": "1.0.0",
+    "description": "Stay focused on your goals with curated content and mindful browsing",
+    "permissions": [
+        "storage",
+        "activeTab",
+        "tabs"
+    ],
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "Save to Goal"
+    },
+    "chrome_url_overrides": {
+        "newtab": "index.html"
+    },
+    "background": {
+        "service_worker": "dev-reload.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "*://*.facebook.com/*"
+            ],
+            "js": [
+                "content-script.js"
+            ],
+            "css": [
+                "content-script.css"
+            ],
+            "run_at": "document_idle"
+        }
+    ]
+}

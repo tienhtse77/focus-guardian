@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Save to Goal</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+    <div id="popup-root">
+        <div class="popup-container">
+            <h2 class="popup-title">Save to Goal</h2>
+
+            <div id="loading" class="loading">Loading...</div>
+
+            <div id="content" class="hidden">
+                <!-- Page Preview -->
+                <div class="page-preview">
+                    <img id="favicon" class="favicon" src="" alt="">
+                    <div class="page-info">
+                        <div id="page-title" class="page-title"></div>
+                        <div id="page-url" class="page-url"></div>
+                    </div>
+                </div>
+
+                <!-- Goal Selector -->
+                <div class="form-group">
+                    <label for="goal-select">Select Goal</label>
+                    <select id="goal-select" class="goal-select">
+                        <option value="">-- Choose a goal --</option>
+                    </select>
+                </div>
+
+                <!-- Save Button -->
+                <button id="save-btn" class="save-btn" disabled>Save to Goal</button>
+
+                <!-- Status Message -->
+                <div id="status" class="status hidden"></div>
+            </div>
+
+            <!-- No Goals Message -->
+            <div id="no-goals" class="no-goals hidden">
+                <p>No goals created yet.</p>
+                <a href="index.html" target="_blank" class="create-link">Create your first goal →</a>
+            </div>
+        </div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,197 @@
+#focus-guardian-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26, 26, 46, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+    animation: fg-fade-in 0.3s ease;
+}
+
+#focus-guardian-overlay.fg-closing {
+    animation: fg-fade-out 0.2s ease forwards;
+}
+
+@keyframes fg-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fg-fade-out {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+.fg-card {
+    background: rgba(255, 255, 255, 0.97);
+    border-radius: 20px;
+    padding: 40px 48px;
+    max-width: 420px;
+    text-align: center;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: fg-slide-up 0.4s ease;
+}
+
+@keyframes fg-slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fg-quote {
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: #1f2937;
+    line-height: 1.5;
+    margin: 0 0 16px;
+    font-style: normal;
+}
+
+.fg-author {
+    display: block;
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-style: normal;
+    margin-bottom: 32px;
+}
+
+.fg-heading {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 8px;
+}
+
+.fg-subtitle {
+    color: #6b7280;
+    font-size: 0.9375rem;
+    margin: 0 0 24px;
+    line-height: 1.5;
+}
+
+.fg-timer {
+    position: relative;
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.fg-timer-bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    animation: fg-timer-progress linear forwards;
+    transform-origin: left;
+}
+
+@keyframes fg-timer-progress {
+    from {
+        transform: scaleX(1);
+    }
+
+    to {
+        transform: scaleX(0);
+    }
+}
+
+.fg-timer-text {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #9ca3af;
+    font-size: 0.75rem;
+}
+
+.fg-stats {
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.fg-stat {
+    display: flex;
+    flex-direction: column;
+}
+
+.fg-stat-value {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #6366f1;
+}
+
+.fg-stat-label {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.fg-actions {
+    display: flex;
+    gap: 12px;
+    flex-direction: column;
+}
+
+.fg-btn {
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.fg-btn-primary {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+}
+
+.fg-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.fg-btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.fg-btn-secondary:hover {
+    background: #e5e7eb;
+}
+
+.fg-btn-ghost {
+    background: transparent;
+    color: #9ca3af;
+    font-size: 0.875rem;
+}
+
+.fg-btn-ghost:hover {
+    color: #6b7280;
+}

@@ -1,0 +1,238 @@
+<!-- Backdrop -->
+<div
+  class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+  (click)="close()"
+>
+  <!-- Modal -->
+  <div
+    class="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-lg shadow-2xl max-h-[80vh] flex flex-col"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- ===== INPUT STATE ===== -->
+    @if (state() === 'input') {
+      <!-- Header -->
+      <div class="flex items-center justify-between p-5 border-b border-gray-800">
+        <h2 class="text-lg font-semibold text-gray-100">Import RSS Feeds</h2>
+        <button class="text-gray-400 hover:text-gray-200" (click)="close()">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex border-b border-gray-800">
+        <button
+          (click)="activeTab.set('opml')"
+          [class]="'flex-1 py-3 text-sm font-medium ' + (activeTab() === 'opml' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-gray-500 hover:text-gray-300')"
+        >
+          Upload OPML
+        </button>
+        <button
+          (click)="activeTab.set('urls')"
+          [class]="'flex-1 py-3 text-sm font-medium ' + (activeTab() === 'urls' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-gray-500 hover:text-gray-300')"
+        >
+          Paste URLs
+        </button>
+      </div>
+
+      <!-- OPML Upload Tab -->
+      @if (activeTab() === 'opml') {
+        <div class="p-5">
+          <div
+            class="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center hover:border-indigo-500 transition-colors cursor-pointer"
+            (click)="fileInput.click()"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)"
+            (drop)="onDrop($event)"
+            [class.border-indigo-500]="isDragging()"
+          >
+            <svg class="w-10 h-10 mx-auto text-gray-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+            </svg>
+            @if (selectedFileName()) {
+              <p class="text-indigo-400 text-sm font-medium">{{ selectedFileName() }}</p>
+              <p class="text-gray-500 text-xs mt-1">Click or drop to replace</p>
+            } @else {
+              <p class="text-gray-300 text-sm font-medium">Drop OPML file here or click to browse</p>
+              <p class="text-gray-500 text-xs mt-1">Supports .opml and .xml files</p>
+            }
+          </div>
+          <p class="text-gray-500 text-xs mt-3">Export OPML from Feedly, Inoreader, or any feed reader.</p>
+          <input
+            #fileInput
+            type="file"
+            accept=".opml,.xml"
+            class="hidden"
+            (change)="onFileSelected($event)"
+          />
+        </div>
+      }
+
+      <!-- Paste URLs Tab -->
+      @if (activeTab() === 'urls') {
+        <div class="p-5">
+          <textarea
+            rows="6"
+            class="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-indigo-500 resize-none"
+            placeholder="Paste RSS feed URLs, one per line:&#10;https://example.com/feed.xml&#10;https://blog.example.com/rss&#10;..."
+            [value]="urlText()"
+            (input)="urlText.set($any($event.target).value)"
+          ></textarea>
+          <p class="text-gray-500 text-xs mt-2">One URL per line. Blank lines are ignored.</p>
+        </div>
+      }
+
+      <!-- Footer -->
+      <div class="flex justify-end gap-3 p-5 border-t border-gray-800">
+        <button class="px-4 py-2 text-sm text-gray-400 hover:text-gray-200" (click)="close()">Cancel</button>
+        <button
+          (click)="onParse()"
+          [disabled]="!canParse()"
+          [class]="'px-4 py-2 text-sm text-white rounded-lg ' + (canParse() ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-indigo-600 opacity-50 cursor-not-allowed')"
+        >
+          {{ activeTab() === 'opml' ? 'Import' : 'Parse Feeds' }}
+        </button>
+      </div>
+    }
+
+    <!-- ===== PARSING STATE ===== -->
+    @if (state() === 'parsing') {
+      <div class="p-8 text-center">
+        <div class="animate-spin h-8 w-8 border-2 border-indigo-500 border-t-transparent rounded-full mx-auto"></div>
+        <p class="text-gray-300 mt-4">Parsing OPML file...</p>
+      </div>
+    }
+
+    <!-- ===== PREVIEW STATE ===== -->
+    @if (state() === 'preview') {
+      <!-- Header -->
+      <div class="flex items-center justify-between p-5 border-b border-gray-800">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-100">Preview Feeds</h2>
+          <p class="text-gray-500 text-sm mt-1">{{ parsedFeeds().length }} feeds found · {{ duplicateCount() }} duplicates skipped</p>
+        </div>
+        <button class="text-gray-400 hover:text-gray-200" (click)="close()">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Select all -->
+      <div class="px-5 py-3 border-b border-gray-800 flex items-center gap-3">
+        <input
+          type="checkbox"
+          [checked]="allSelected()"
+          (change)="toggleSelectAll()"
+          class="w-4 h-4 rounded bg-gray-800 border-gray-600 text-indigo-600 focus:ring-indigo-500"
+        />
+        <span class="text-sm text-gray-400">Select all ({{ selectableFeeds().length }})</span>
+      </div>
+
+      <!-- Feed list -->
+      <div class="overflow-y-auto flex-1 divide-y divide-gray-800/50">
+        @for (feed of selectableFeeds(); track feed.url) {
+          <label class="flex items-start gap-3 px-5 py-3 hover:bg-gray-800/50 cursor-pointer">
+            <input
+              type="checkbox"
+              [checked]="selectedUrls().has(feed.url)"
+              (change)="toggleFeed(feed.url)"
+              class="w-4 h-4 mt-0.5 rounded bg-gray-800 border-gray-600 text-indigo-600 focus:ring-indigo-500"
+            />
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-gray-200 truncate">{{ feed.title }}</p>
+              <p class="text-xs text-gray-500 truncate">{{ feed.url }}</p>
+            </div>
+          </label>
+        }
+        @for (feed of duplicateFeeds(); track feed.url) {
+          <div class="flex items-start gap-3 px-5 py-3 opacity-50">
+            <input type="checkbox" disabled class="w-4 h-4 mt-0.5 rounded bg-gray-800 border-gray-600" />
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-gray-400 truncate">{{ feed.title }} <span class="text-xs text-yellow-500 ml-2">Already added</span></p>
+              <p class="text-xs text-gray-600 truncate">{{ feed.url }}</p>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Footer -->
+      <div class="flex items-center justify-between p-5 border-t border-gray-800">
+        <span class="text-sm text-gray-500">{{ selectedCount() }} selected</span>
+        <div class="flex gap-3">
+          <button class="px-4 py-2 text-sm text-gray-400 hover:text-gray-200" (click)="close()">Cancel</button>
+          <button
+            (click)="onImport()"
+            [disabled]="selectedCount() === 0"
+            [class]="'px-4 py-2 text-sm text-white rounded-lg ' + (selectedCount() > 0 ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-indigo-600 opacity-50 cursor-not-allowed')"
+          >
+            Import {{ selectedCount() }} Feeds
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- ===== SUCCESS STATE ===== -->
+    @if (state() === 'success') {
+      <div class="p-8 text-center">
+        <div class="w-12 h-12 bg-green-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-100">Feeds Imported</h3>
+        <div class="mt-3 space-y-1">
+          <p class="text-sm text-gray-300"><span class="text-green-400 font-medium">{{ importResult().added }} feeds</span> added successfully</p>
+          @if (importResult().skipped > 0) {
+            <p class="text-sm text-gray-500">{{ importResult().skipped }} duplicates skipped</p>
+          }
+        </div>
+        <button
+          (click)="close()"
+          class="mt-6 px-6 py-2 text-sm bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg"
+        >
+          Done
+        </button>
+      </div>
+    }
+
+    <!-- ===== ERROR: PARSE ===== -->
+    @if (state() === 'error-parse') {
+      <div class="p-8 text-center">
+        <div class="w-12 h-12 bg-red-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-100">Invalid File</h3>
+        <p class="text-sm text-gray-400 mt-2">The file could not be parsed as OPML. Make sure it's a valid .opml or .xml file exported from a feed reader.</p>
+        <button
+          (click)="resetToInput()"
+          class="mt-6 px-6 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg"
+        >
+          Try Again
+        </button>
+      </div>
+    }
+
+    <!-- ===== ERROR: EMPTY ===== -->
+    @if (state() === 'error-empty') {
+      <div class="p-8 text-center">
+        <div class="w-12 h-12 bg-yellow-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-100">No Feeds Found</h3>
+        <p class="text-sm text-gray-400 mt-2">The file was parsed but no RSS feeds were found. Make sure your OPML file contains RSS subscriptions.</p>
+        <button
+          (click)="resetToInput()"
+          class="mt-6 px-6 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg"
+        >
+          Try Again
+        </button>
+      </div>
+    }
+  </div>
+</div>

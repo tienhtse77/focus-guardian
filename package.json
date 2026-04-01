@@ -1,0 +1,53 @@
+{
+  "name": "focus-guardian",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build:css": "npx @tailwindcss/cli -i src/styles.css -o dist/browser/styles.css --content \"src/**/*.{html,ts}\"",
+    "build": "ng build && npm run build:css && npm run build:content-script",
+    "build:content-script": "npx esbuild src/content-script/facebook-interceptor.ts --bundle --outfile=dist/browser/content-script.js --format=iife && copy src\\content-script\\content-script.css dist\\browser\\content-script.css",
+    "dev": "bash scripts/dev.sh",
+    "test": "ng test"
+  },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "overrides": [
+      {
+        "files": "*.html",
+        "options": {
+          "parser": "angular"
+        }
+      }
+    ]
+  },
+  "private": true,
+  "packageManager": "npm@10.9.3",
+  "dependencies": {
+    "@angular/common": "^21.1.0",
+    "@angular/compiler": "^21.1.0",
+    "@angular/core": "^21.1.0",
+    "@angular/forms": "^21.1.0",
+    "@angular/platform-browser": "^21.1.0",
+    "@angular/router": "^21.1.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular-builders/custom-webpack": "^21.0.3",
+    "@angular/build": "^21.1.0",
+    "@angular/cli": "^21.1.0",
+    "@angular/compiler-cli": "^21.1.0",
+    "@anthropic-ai/sdk": "^0.71.2",
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/chrome": "^0.1.33",
+    "esbuild": "^0.27.2",
+    "jsdom": "^27.1.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18",
+    "typescript": "~5.9.2",
+    "vitest": "^4.0.8",
+    "webpack-ext-reloader": "^1.1.13"
+  }
+}

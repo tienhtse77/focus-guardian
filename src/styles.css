@@ -1,0 +1,175 @@
+@import "tailwindcss";
+@source "./**/*.{html,ts}";
+
+/* Custom theme */
+@theme {
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-serif: 'Playfair Display', Georgia, serif;
+
+    --color-background: #faf9f7;
+    --color-surface: #ffffff;
+    --color-accent-primary: #6366f1;
+    --color-accent-secondary: #8b5cf6;
+    --color-accent-warm: #f59e0b;
+}
+
+/* Light theme variables (default) */
+:root {
+    --bg-primary: #faf9f7;
+    --bg-surface: #ffffff;
+    --bg-hover: #f3f4f6;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --border-color: #e5e7eb;
+    --accent: #6366f1;
+    --accent-hover: #4f46e5;
+}
+
+/* Dark theme variables - triggered by .dark class on html */
+html.dark {
+    --bg-primary: #0f0f10;
+    --bg-surface: #1a1a1c;
+    --bg-hover: #2a2a2e;
+    --text-primary: #f9fafb;
+    --text-secondary: #d1d5db;
+    --text-muted: #9ca3af;
+    --border-color: #374151;
+    --accent: #818cf8;
+    --accent-hover: #6366f1;
+}
+
+/* Base resets */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Apply theme colors to common elements */
+.bg-\[\#faf9f7\] {
+    background-color: var(--bg-primary) !important;
+}
+
+.bg-white {
+    background-color: var(--bg-surface) !important;
+}
+
+.bg-white\/50 {
+    background-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+html.dark .bg-white\/50 {
+    background-color: rgba(26, 26, 28, 0.7) !important;
+}
+
+/* Text colors that adapt to theme */
+.text-gray-800 {
+    color: var(--text-primary) !important;
+}
+
+.text-gray-600,
+.text-gray-500 {
+    color: var(--text-secondary) !important;
+}
+
+.text-gray-400 {
+    color: var(--text-muted) !important;
+}
+
+/* Border colors */
+.border-gray-100,
+.border-gray-200 {
+    border-color: var(--border-color) !important;
+}
+
+/* Background colors */
+.bg-gray-50,
+.bg-gray-100 {
+    background-color: var(--bg-hover) !important;
+}
+
+/* Card backgrounds in dark mode */
+html.dark .bg-white {
+    background-color: var(--bg-surface) !important;
+}
+
+/* Shadows for dark mode */
+html.dark .shadow-sm,
+html.dark .shadow-md,
+html.dark .shadow-xl {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Form elements */
+input,
+select {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+input::placeholder {
+    color: var(--text-muted);
+}
+
+/* SVG fixes */
+svg {
+    display: inline-block;
+    vertical-align: middle;
+    max-width: 100%;
+    height: auto;
+}
+
+svg[class*="w-"] {
+    flex-shrink: 0;
+}
+
+/* Smooth transitions */
+button,
+a,
+input,
+select {
+    transition: all 0.2s ease;
+}
+
+/* Loading spinner */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Theme toggle button styles */
+.theme-toggle {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+}
+
+.theme-toggle:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+}
