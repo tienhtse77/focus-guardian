@@ -10,108 +10,176 @@ import { ImportFeedsComponent } from '../import-feeds/import-feeds.component';
   selector: 'app-goal-view',
   standalone: true,
   imports: [CommonModule, ContentCardComponent, SavedPageCardComponent, ImportFeedsComponent],
+  styles: [`:host { display: contents; }`],
   template: `
-    <div class="max-w-2xl w-full">
+    <div class="max-w-7xl mx-auto">
       <!-- Import success toast -->
       @if (importMessage()) {
-        <div class="mb-4 px-4 py-2 bg-green-50 text-green-700 text-sm rounded-lg text-center">
+        <div class="mb-6 px-5 py-3 bg-primary-container text-on-primary-container text-sm rounded-xl text-center font-label font-semibold">
           {{ importMessage() }}
         </div>
       }
 
-      <!-- Goal Title -->
-      <div class="text-center mb-8">
-        <h1 class="text-5xl font-serif text-gray-800 mb-2 tracking-tight">
-          {{ goal.title }}
-        </h1>
-        <p class="text-gray-400 text-sm">Curated content for your goal</p>
-      </div>
-      
-      <!-- Saved Pages Section -->
-      @if (savedPages().length > 0) {
-        <div class="mb-10">
-          <h3 class="text-sm font-medium text-gray-500 mb-3 flex items-center gap-2">
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
-            </svg>
-            Saved Pages ({{ savedPages().length }})
-          </h3>
-          <div class="space-y-2">
-            @for (page of savedPages(); track page.id) {
-              <app-saved-page-card
-                [page]="page"
-                (statusChanged)="onPageStatusChange(page, $event)"
-                (deleted)="onPageDelete(page)"
-              />
-            }
-          </div>
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <!-- Left Column: Main Content -->
+        <div class="lg:col-span-8 space-y-12">
+
+          <!-- Goal Header -->
+          <section class="space-y-3">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">{{ goal.icon }}</span>
+              <div>
+                <h1 class="text-3xl font-headline font-extrabold text-on-surface tracking-tight">{{ goal.title }}</h1>
+                <p class="text-sm text-on-surface-variant font-light mt-1">Curated content for your goal</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 mt-2">
+              <button (click)="editClicked.emit()" class="flex items-center gap-2 text-sm text-on-surface-variant hover:text-primary font-label">
+                <span class="material-symbols-outlined text-lg">edit</span>
+                Edit Goal
+              </button>
+              <button (click)="confirmDelete()" class="flex items-center gap-2 text-sm text-on-surface-variant hover:text-error font-label">
+                <span class="material-symbols-outlined text-lg">delete</span>
+                Delete
+              </button>
+            </div>
+          </section>
+
+          <!-- Saved Pages Section -->
+          @if (savedPages().length > 0) {
+            <section class="space-y-5">
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary text-lg">bookmark</span>
+                <h3 class="text-lg font-headline font-bold text-on-surface tracking-tight">Saved Pages</h3>
+                <span class="text-xs font-label font-bold text-primary bg-primary-container px-2 py-1 rounded">{{ savedPages().length }} PAGES</span>
+              </div>
+              <div class="space-y-2">
+                @for (page of savedPages(); track page.id) {
+                  <app-saved-page-card
+                    [page]="page"
+                    (statusChanged)="onPageStatusChange(page, $event)"
+                    (deleted)="onPageDelete(page)"
+                  />
+                }
+              </div>
+            </section>
+          }
+
+          <!-- Curated Content Section -->
+          @if (goal.sources && goal.sources.length > 0) {
+            <section class="space-y-6">
+              <div class="flex justify-between items-end">
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-primary text-lg">auto_awesome</span>
+                  <h3 class="text-lg font-headline font-bold text-on-surface tracking-tight">Curated Content</h3>
+                </div>
+                <button
+                  (click)="refreshContent()"
+                  [disabled]="isLoading()"
+                  class="flex items-center gap-2 text-sm font-label text-primary font-semibold hover:text-primary-dim disabled:opacity-50"
+                >
+                  <span class="material-symbols-outlined text-sm" [class.animate-spin]="isLoading()">refresh</span>
+                  {{ isLoading() ? 'Fetching...' : 'Refresh' }}
+                </button>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                @for (item of content(); track item.id) {
+                  <app-content-card
+                    [content]="item"
+                    (clicked)="onContentClick(item)"
+                  />
+                } @empty {
+                  <div class="col-span-2 text-center py-8">
+                    <span class="material-symbols-outlined text-outline text-3xl mb-3 block">article</span>
+                    <p class="text-on-surface-variant text-sm">Click "Refresh" to fetch articles from your sources</p>
+                  </div>
+                }
+              </div>
+            </section>
+          }
+
+          <!-- Empty State: No pages and no sources -->
+          @if (savedPages().length === 0 && (!goal.sources || goal.sources.length === 0)) {
+            <div class="bg-tertiary-container rounded-lg p-10 editorial-shadow relative overflow-hidden text-center">
+              <span class="material-symbols-outlined absolute top-6 right-8 text-6xl text-tertiary opacity-10 rotate-12">spa</span>
+              <div class="relative z-10">
+                <span class="material-symbols-outlined text-primary text-3xl mb-3 block">library_books</span>
+                <p class="text-on-tertiary-container font-headline font-bold text-lg mb-2">No saved pages or content sources</p>
+                <p class="text-sm text-on-tertiary-fixed-variant leading-relaxed">
+                  Click the extension icon on any webpage to save it here,<br>or edit this goal to add RSS/YouTube/Reddit sources.
+                </p>
+              </div>
+            </div>
+          }
         </div>
-      }
-      
-      <!-- Curated Content Section -->
-      @if (goal.sources && goal.sources.length > 0) {
-        <div class="text-center">
-          <div class="flex items-center justify-center gap-2 mb-4">
-            <h3 class="text-sm font-medium text-gray-500">Curated Content</h3>
-            <button 
-              (click)="refreshContent()"
-              [disabled]="isLoading()"
-              class="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 rounded transition-all disabled:opacity-50"
-            >
-              <svg width="12" height="12" class="shrink-0" [class.animate-spin]="isLoading()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-              </svg>
-              {{ isLoading() ? 'Fetching...' : 'Refresh' }}
-            </button>
-          </div>
-          
-          <div class="flex gap-4 justify-center flex-wrap">
-            @for (item of content(); track item.id) {
-              <app-content-card
-                [content]="item"
-                (clicked)="onContentClick(item)"
-              />
-            } @empty {
-              <div class="text-gray-400 py-4 text-sm">
-                Click "Refresh" to fetch articles from your sources
+
+        <!-- Right Column: Sidebar Info -->
+        <div class="lg:col-span-4">
+          <div class="sticky top-28 space-y-8">
+
+            <!-- Content Sources Card -->
+            @if (goal.sources && goal.sources.length > 0) {
+              <div class="bg-surface-container-low p-6 rounded-lg space-y-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-sm font-headline font-bold text-on-surface">Content Sources</h3>
+                  <span class="text-xs font-label font-bold text-primary bg-primary-container px-2 py-1 rounded">{{ goal.sources.length }} FEEDS</span>
+                </div>
+                <div class="space-y-3">
+                  @for (source of goal.sources; track source.url) {
+                    <div class="flex items-center gap-3">
+                      <div class="w-7 h-7 rounded-full bg-surface-container-lowest flex items-center justify-center">
+                        @switch (source.type) {
+                          @case ('youtube') {
+                            <span class="material-symbols-outlined text-error text-sm">play_circle</span>
+                          }
+                          @case ('reddit') {
+                            <span class="material-symbols-outlined text-tertiary text-sm">forum</span>
+                          }
+                          @default {
+                            <span class="material-symbols-outlined text-primary text-sm">rss_feed</span>
+                          }
+                        }
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm text-on-surface truncate">{{ source.url }}</p>
+                        <p class="text-[10px] font-label text-outline uppercase tracking-widest">{{ source.type }}</p>
+                      </div>
+                    </div>
+                  }
+                </div>
               </div>
             }
+
+            <!-- Import Feeds Button -->
+            <button
+              (click)="showImportModal.set(true)"
+              class="w-full bg-primary text-on-primary py-4 rounded-xl font-bold text-sm tracking-wide editorial-shadow flex items-center justify-center gap-2 hover:bg-primary-dim"
+            >
+              <span class="material-symbols-outlined text-sm">upload</span>
+              Import Feeds
+            </button>
+
+            <!-- Editor's Tip -->
+            <div class="bg-tertiary-container p-6 rounded-lg relative overflow-hidden">
+              <span class="material-symbols-outlined absolute top-4 right-4 text-5xl text-tertiary opacity-10 rotate-12">format_quote</span>
+              <div class="flex items-start gap-3 relative z-10">
+                <span class="material-symbols-outlined text-primary filled">lightbulb</span>
+                <div>
+                  <h4 class="text-[10px] font-label font-bold uppercase tracking-[0.2em] text-on-tertiary-container mb-2">Editor's Tip</h4>
+                  <p class="text-sm text-on-tertiary-fixed-variant leading-relaxed">
+                    @if (savedPages().length > 0) {
+                      You've saved {{ savedPages().length }} pages. Consider reviewing them during your peak focus hours.
+                    } @else {
+                      Save pages while browsing to build your curated reading list for this goal.
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
-      }
-      
-      <!-- Empty State -->
-      @if (savedPages().length === 0 && (!goal.sources || goal.sources.length === 0)) {
-        <div class="text-center text-gray-400 py-8">
-          <p class="mb-4">No saved pages or content sources</p>
-          <p class="text-sm">Click the extension icon on any webpage to save it here,<br>or edit this goal to add RSS/YouTube/Reddit sources.</p>
-        </div>
-      }
-      
-      <!-- Edit/Delete Actions -->
-      <div class="mt-12 flex gap-4 justify-center">
-        <button
-          (click)="showImportModal.set(true)"
-          class="inline-flex items-center gap-1 px-4 py-2 text-sm text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors"
-          title="Import RSS feeds"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-          </svg>
-          Import Feeds
-        </button>
-        <button
-          (click)="editClicked.emit()"
-          class="px-4 py-2 text-sm text-gray-500 hover:text-indigo-500 transition-colors"
-        >
-          Edit Goal
-        </button>
-        <button
-          (click)="confirmDelete()"
-          class="px-4 py-2 text-sm text-gray-400 hover:text-red-500 transition-colors"
-        >
-          Delete
-        </button>
       </div>
 
       <!-- Import Feeds Modal -->
@@ -159,7 +227,6 @@ export class GoalViewComponent implements OnInit, OnChanges {
 
   async loadSavedPages() {
     const pages = await this.storageService.getSavedPages(this.goal.id);
-    // Sort: favorites first, then by saved date (newest first)
     pages.sort((a, b) => {
       if (a.status === 'favorite' && b.status !== 'favorite') return -1;
       if (b.status === 'favorite' && a.status !== 'favorite') return 1;
@@ -214,16 +281,13 @@ export class GoalViewComponent implements OnInit, OnChanges {
 
   async onFeedsImported(result: { added: number; skipped: number }) {
     if (result.added > 0) {
-      // Reload the goal to pick up new sources
       const goals = await this.storageService.getGoals();
       const updated = goals.find(g => g.id === this.goal.id);
       if (updated) {
-        // Mutate the input goal so parent can see changes
         this.goal.sources = updated.sources;
       }
       await this.loadContent();
 
-      // Show brief message
       this.importMessage.set(`${result.added} feeds imported`);
       setTimeout(() => this.importMessage.set(''), 3000);
     }

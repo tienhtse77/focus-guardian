@@ -7,78 +7,69 @@ import { SavedPage, PageStatus } from '../../services/storage.service';
     standalone: true,
     imports: [CommonModule],
     template: `
-    <div class="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-all group">
+    <div class="flex items-center gap-4 p-4 rounded-lg bg-surface-container-lowest editorial-shadow hover:bg-surface-container-low group cursor-pointer">
       <!-- Favicon -->
-      <img 
-        [src]="page.favicon || 'https://www.google.com/s2/favicons?domain=' + getDomain(page.url)"
-        class="w-5 h-5 rounded mt-0.5 shrink-0"
+      <img
+        [src]="page.favicon || 'https://www.google.com/s2/favicons?domain=' + getDomain(page.url) + '&sz=32'"
+        class="w-5 h-5 rounded shrink-0"
         alt=""
         (error)="onFaviconError($event)"
       />
-      
+
       <!-- Content -->
       <div class="flex-1 min-w-0">
-        <a 
-          [href]="page.url" 
+        <a
+          [href]="page.url"
           target="_blank"
           (click)="onOpen()"
-          class="block text-sm font-medium text-gray-800 hover:text-indigo-600 truncate"
+          class="block text-sm font-semibold text-on-surface hover:text-primary truncate"
         >
           {{ page.title }}
         </a>
-        <div class="flex items-center gap-2 mt-1">
-          <span class="text-xs text-gray-400">{{ getDomain(page.url) }}</span>
-          <span class="text-xs px-1.5 py-0.5 rounded" [class]="getStatusClass()">
+        <div class="flex items-center gap-3 mt-1">
+          <span class="text-xs text-on-surface-variant font-label">{{ getDomain(page.url) }}</span>
+          <span class="text-[10px] font-label font-bold uppercase tracking-widest px-2 py-0.5 rounded" [class]="getStatusClass()">
             {{ getStatusLabel() }}
           </span>
         </div>
       </div>
-      
+
       <!-- Actions -->
-      <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <!-- Status Buttons -->
+      <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100">
         @if (page.status !== 'viewed') {
-          <button 
-            (click)="onStatusChange('viewed')" 
-            class="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded"
+          <button
+            (click)="onStatusChange('viewed')"
+            class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-primary"
             title="Mark as viewed"
           >
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-            </svg>
+            <span class="material-symbols-outlined text-lg">check_circle</span>
           </button>
         }
-        
-        <button 
-          (click)="onStatusChange(page.status === 'favorite' ? 'viewed' : 'favorite')" 
-          class="p-1.5 rounded"
-          [class]="page.status === 'favorite' ? 'text-amber-500' : 'text-gray-400 hover:text-amber-500 hover:bg-amber-50'"
+
+        <button
+          (click)="onStatusChange(page.status === 'favorite' ? 'viewed' : 'favorite')"
+          class="p-2 rounded-full hover:bg-surface-container"
+          [class]="page.status === 'favorite' ? 'text-tertiary' : 'text-on-surface-variant hover:text-tertiary'"
           title="Favorite"
         >
-          <svg width="14" height="14" [attr.fill]="page.status === 'favorite' ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-          </svg>
+          <span class="material-symbols-outlined text-lg" [class.filled]="page.status === 'favorite'">star</span>
         </button>
-        
-        <button 
-          (click)="onStatusChange(page.status === 'watch-later' ? 'viewed' : 'watch-later')" 
-          class="p-1.5 rounded"
-          [class]="page.status === 'watch-later' ? 'text-blue-500' : 'text-gray-400 hover:text-blue-500 hover:bg-blue-50'"
+
+        <button
+          (click)="onStatusChange(page.status === 'watch-later' ? 'viewed' : 'watch-later')"
+          class="p-2 rounded-full hover:bg-surface-container"
+          [class]="page.status === 'watch-later' ? 'text-primary' : 'text-on-surface-variant hover:text-primary'"
           title="Watch later"
         >
-          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
+          <span class="material-symbols-outlined text-lg" [class.filled]="page.status === 'watch-later'">schedule</span>
         </button>
-        
-        <button 
-          (click)="onDelete()" 
-          class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded"
+
+        <button
+          (click)="onDelete()"
+          class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-error"
           title="Remove"
         >
-          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-          </svg>
+          <span class="material-symbols-outlined text-lg">delete</span>
         </button>
       </div>
     </div>
@@ -100,10 +91,10 @@ export class SavedPageCardComponent {
 
     getStatusClass(): string {
         switch (this.page.status) {
-            case 'unread': return 'bg-gray-100 text-gray-600';
-            case 'viewed': return 'bg-green-100 text-green-700';
-            case 'favorite': return 'bg-amber-100 text-amber-700';
-            case 'watch-later': return 'bg-blue-100 text-blue-700';
+            case 'unread': return 'text-primary bg-primary-container';
+            case 'viewed': return 'text-outline bg-surface-container';
+            case 'favorite': return 'text-tertiary bg-tertiary-container';
+            case 'watch-later': return 'text-primary-dim bg-inverse-primary';
         }
     }
 
@@ -111,7 +102,7 @@ export class SavedPageCardComponent {
         switch (this.page.status) {
             case 'unread': return 'New';
             case 'viewed': return 'Viewed';
-            case 'favorite': return '★ Favorite';
+            case 'favorite': return 'Favorite';
             case 'watch-later': return 'Watch Later';
         }
     }

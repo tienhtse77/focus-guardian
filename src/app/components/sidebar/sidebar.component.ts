@@ -6,37 +6,55 @@ import { Goal } from '../../services/storage.service';
   selector: 'app-sidebar',
   standalone: true,
   imports: [CommonModule],
+  styles: [`:host { display: contents; }`],
   template: `
-    <aside class="w-16 bg-white/50 backdrop-blur-sm border-r border-gray-100 flex flex-col items-center py-6 gap-4">
-      <!-- Goal Icons with Drag & Drop -->
-      @for (goal of goals; track goal.id; let i = $index) {
+    <aside class="fixed left-0 top-0 h-full w-[280px] bg-surface-container-low flex flex-col py-8 px-6 font-body tracking-tight text-sm z-50">
+      <!-- Brand -->
+      <div class="mb-10 px-4">
+        <h1 class="text-xl font-bold text-on-surface">Focus Guardian</h1>
+        <p class="text-[10px] text-outline-variant mt-1 uppercase tracking-[0.2em] font-label font-semibold">Curated Sanctuary</p>
+      </div>
+
+      <!-- Goal Navigation -->
+      <nav class="flex-1 space-y-1 overflow-y-auto no-scrollbar">
+        <p class="text-[10px] font-label uppercase tracking-[0.2em] text-outline-variant px-4 mb-3 font-semibold">Your Goals</p>
+
+        @for (goal of goals; track goal.id; let i = $index) {
+          <button
+            draggable="true"
+            (dragstart)="onDragStart($event, i)"
+            (dragover)="onDragOver($event, i)"
+            (dragenter)="onDragEnter($event, i)"
+            (dragleave)="onDragLeave($event)"
+            (drop)="onDrop($event, i)"
+            (dragend)="onDragEnd()"
+            (click)="goalSelected.emit(goal.id)"
+            [class]="getGoalClass(goal.id, i)"
+            [title]="goal.title"
+          >
+            <span class="text-lg pointer-events-none">{{ goal.icon }}</span>
+            <span class="truncate pointer-events-none">{{ goal.title }}</span>
+          </button>
+        }
+
+        <!-- Add Goal Button -->
         <button
-          draggable="true"
-          (dragstart)="onDragStart($event, i)"
-          (dragover)="onDragOver($event, i)"
-          (dragenter)="onDragEnter($event, i)"
-          (dragleave)="onDragLeave($event)"
-          (drop)="onDrop($event, i)"
-          (dragend)="onDragEnd()"
-          (click)="goalSelected.emit(goal.id)"
-          [class]="getGoalClass(goal.id, i)"
-          [style.color]="goal.color"
-          [title]="goal.title"
+          (click)="addGoalClicked.emit()"
+          class="flex items-center gap-4 px-4 py-3 text-outline hover:text-primary hover:bg-surface-container rounded-full w-full mt-2"
+          title="Add new goal"
         >
-          <span class="text-xl pointer-events-none">{{ goal.icon }}</span>
+          <span class="material-symbols-outlined text-lg">add_circle</span>
+          <span>Add Goal</span>
         </button>
-      }
-      
-      <!-- Add Goal Button -->
-      <button
-        (click)="addGoalClicked.emit()"
-        class="w-10 h-10 rounded-xl flex items-center justify-center text-gray-400 hover:text-indigo-500 hover:bg-white/80 transition-all mt-auto"
-        title="Add new goal"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-        </svg>
-      </button>
+      </nav>
+
+      <!-- Bottom -->
+      <div class="mt-auto pt-6" style="border-top: 1px solid rgba(173,179,178,0.15)">
+        <a href="#" class="flex items-center gap-4 px-4 py-2 text-on-surface-variant hover:bg-surface-container rounded-full text-sm">
+          <span class="material-symbols-outlined text-lg">settings</span>
+          <span>Settings</span>
+        </a>
+      </div>
     </aside>
   `
 })
@@ -55,16 +73,16 @@ export class SidebarComponent {
     const isDragging = this.draggedIndex() === index;
     const isDragOver = this.dragOverIndex() === index && this.draggedIndex() !== index;
 
-    let classes = 'w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-grab active:cursor-grabbing ';
+    let classes = 'flex items-center gap-4 px-4 py-3 w-full rounded-full cursor-grab active:cursor-grabbing ';
 
     if (isDragging) {
       classes += 'opacity-50 scale-90 ';
     } else if (isDragOver) {
-      classes += 'ring-2 ring-indigo-300 ring-offset-2 scale-110 ';
+      classes += 'bg-surface-container-high scale-105 ';
     } else if (isSelected) {
-      classes += 'ring-2 ring-offset-2 ring-indigo-400 bg-white shadow-sm ';
+      classes += 'text-primary font-bold bg-surface editorial-shadow ';
     } else {
-      classes += 'hover:bg-white/80 ';
+      classes += 'text-on-surface-variant hover:bg-surface-container ';
     }
 
     return classes;
@@ -93,7 +111,6 @@ export class SidebarComponent {
   }
 
   onDragLeave(event: DragEvent) {
-    // Only clear if we're actually leaving the element
     const relatedTarget = event.relatedTarget as HTMLElement;
     if (!relatedTarget || !relatedTarget.closest('button[draggable]')) {
       this.dragOverIndex.set(null);

@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Focus Guardian — Editorial Tranquility Mockup</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .material-symbols-outlined.filled {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .editorial-shadow {
+      box-shadow: 0 12px 32px rgba(45, 52, 51, 0.04);
+    }
+    .editorial-shadow-hover {
+      box-shadow: 0 16px 40px rgba(45, 52, 51, 0.07);
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .glass { background: rgba(255,255,255,0.80); backdrop-filter: blur(12px); }
+    .dark .glass { background: rgba(15,20,18,0.85); backdrop-filter: blur(12px); }
+
+    /* State tabs for demo */
+    .state-tab { cursor: pointer; padding: 6px 16px; border-radius: 9999px; font-size: 12px; font-weight: 600; transition: all 0.2s; }
+    .state-tab.active { background: #4E6358; color: #e6fdee; }
+    .state-tab:not(.active) { background: #ebeeed; color: #5a6060; }
+    .state-panel { display: none; }
+    .state-panel.active { display: block; }
+
+    /* Smooth transitions */
+    * { transition-property: background-color, border-color, color, opacity, box-shadow, transform; transition-duration: 0.2s; transition-timing-function: ease; }
+
+    /* Dark mode overrides */
+    html.dark { color-scheme: dark; }
+    html.dark body { background: #0f1412; color: #e4e9e8; }
+    html.dark .bg-surface-container-low { background: #1a201e !important; }
+    html.dark .bg-background, html.dark .bg-surface { background: #0f1412 !important; }
+    html.dark .bg-surface-container-lowest { background: #1a201e !important; }
+    html.dark .bg-surface-container { background: #222826 !important; }
+    html.dark .bg-tertiary-container { background: #2e2820 !important; }
+    html.dark .text-on-surface { color: #e4e9e8 !important; }
+    html.dark .text-on-surface-variant { color: #adb3b2 !important; }
+    html.dark .text-outline { color: #757c7b !important; }
+    html.dark .text-primary { color: #a8c4b5 !important; }
+    html.dark .bg-primary { background: #3a4d43 !important; }
+    html.dark .editorial-shadow { box-shadow: 0 12px 32px rgba(0,0,0,0.2); }
+  </style>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-container-low": "#f2f4f3",
+            "surface-dim": "#d4dcda",
+            "surface-container-high": "#e4e9e8",
+            "primary": "#4e6358",
+            "on-surface-variant": "#5a6060",
+            "inverse-primary": "#d9f1e2",
+            "error": "#9f403d",
+            "secondary-container": "#dde4de",
+            "secondary-dim": "#4d5550",
+            "surface-container-highest": "#dde4e3",
+            "surface-container-lowest": "#ffffff",
+            "secondary-fixed-dim": "#ced6d0",
+            "tertiary-fixed": "#faecdc",
+            "tertiary-dim": "#5b5246",
+            "primary-dim": "#43574c",
+            "on-tertiary-fixed-variant": "#6b6155",
+            "on-primary": "#e6fdee",
+            "on-error-container": "#752121",
+            "on-secondary": "#f3fbf4",
+            "on-surface": "#2d3433",
+            "on-tertiary": "#fff8f2",
+            "on-primary-fixed-variant": "#4b6055",
+            "secondary-fixed": "#dde4de",
+            "surface-tint": "#4e6358",
+            "outline-variant": "#adb3b2",
+            "error-container": "#fe8983",
+            "on-secondary-fixed": "#39413d",
+            "on-background": "#2d3433",
+            "on-secondary-container": "#4c544f",
+            "surface-variant": "#dde4e3",
+            "error-dim": "#4e0309",
+            "background": "#f9f9f8",
+            "on-error": "#fff7f6",
+            "primary-fixed": "#d1e8da",
+            "inverse-surface": "#0c0f0e",
+            "on-primary-container": "#42564b",
+            "tertiary-fixed-dim": "#ebdece",
+            "secondary": "#59615c",
+            "tertiary-container": "#faecdc",
+            "on-secondary-fixed-variant": "#555d58",
+            "primary-container": "#d1e8da",
+            "outline": "#757c7b",
+            "surface-container": "#ebeeed",
+            "tertiary": "#675e51",
+            "on-tertiary-container": "#60574b",
+            "on-primary-fixed": "#304439",
+            "surface-bright": "#f9f9f8",
+            "inverse-on-surface": "#9c9d9c",
+            "surface": "#f9f9f8",
+            "on-tertiary-fixed": "#4e453a",
+            "primary-fixed-dim": "#c3dacc"
+          },
+          fontFamily: {
+            "headline": ["Manrope", "system-ui", "sans-serif"],
+            "body": ["Manrope", "system-ui", "sans-serif"],
+            "label": ["Inter", "system-ui", "sans-serif"]
+          },
+          borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+        },
+      },
+    }
+  </script>
+</head>
+<body class="bg-background text-on-surface font-body antialiased no-scrollbar">
+
+<!-- ═══════════════════════════════════════════════════════════
+     DEMO STATE SWITCHER (not part of the actual UI)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="fixed top-4 right-4 z-[100] flex flex-col gap-3 items-end">
+  <!-- Theme Toggle -->
+  <button onclick="document.documentElement.classList.toggle('dark')" class="glass px-4 py-2 rounded-full text-xs font-label font-semibold flex items-center gap-2 editorial-shadow">
+    <span class="material-symbols-outlined text-sm">dark_mode</span>
+    Toggle Dark Mode
+  </button>
+  <!-- State Tabs -->
+  <div class="glass px-3 py-2 rounded-full flex gap-2 editorial-shadow">
+    <div class="state-tab active" onclick="switchState('populated')">Populated</div>
+    <div class="state-tab" onclick="switchState('empty')">Empty</div>
+    <div class="state-tab" onclick="switchState('loading')">Loading</div>
+    <div class="state-tab" onclick="switchState('modal')">Goal Form</div>
+  </div>
+</div>
+
+<script>
+  function switchState(state) {
+    document.querySelectorAll('.state-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    document.querySelectorAll('.state-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.state-panel[data-state="' + state + '"]').forEach(p => p.classList.add('active'));
+    // Show/hide modal overlay
+    const modal = document.getElementById('goal-form-modal');
+    if (state === 'modal') {
+      modal.classList.remove('hidden');
+      document.querySelectorAll('.state-panel[data-state="populated"]').forEach(p => p.classList.add('active'));
+    } else {
+      modal.classList.add('hidden');
+    }
+  }
+</script>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     SIDEBAR — Editorial Navigation
+     ═══════════════════════════════════════════════════════════ -->
+<aside class="fixed left-0 top-0 h-full w-[280px] bg-surface-container-low flex flex-col py-8 px-6 font-body tracking-tight text-sm z-50">
+  <!-- Brand -->
+  <div class="mb-10 px-4">
+    <h1 class="text-xl font-bold text-on-surface">Focus Guardian</h1>
+    <p class="text-[10px] text-outline-variant mt-1 uppercase tracking-[0.2em] font-label font-semibold">Curated Sanctuary</p>
+  </div>
+
+  <!-- Goal Navigation -->
+  <nav class="flex-1 space-y-1">
+    <p class="text-[10px] font-label uppercase tracking-[0.2em] text-outline-variant px-4 mb-3 font-semibold">Your Goals</p>
+
+    <!-- Active Goal -->
+    <a href="#" class="flex items-center gap-4 px-4 py-3 text-primary font-bold bg-surface rounded-full editorial-shadow">
+      <span class="text-lg">📚</span>
+      <span>Learn Photography</span>
+    </a>
+
+    <!-- Other Goals -->
+    <a href="#" class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-container rounded-full">
+      <span class="text-lg">💻</span>
+      <span>Master TypeScript</span>
+    </a>
+    <a href="#" class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-container rounded-full">
+      <span class="text-lg">🏋️</span>
+      <span>Stay Fit</span>
+    </a>
+    <a href="#" class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:bg-surface-container rounded-full">
+      <span class="text-lg">🌍</span>
+      <span>Learn German</span>
+    </a>
+
+    <!-- Add Goal Button -->
+    <button class="flex items-center gap-4 px-4 py-3 text-outline hover:text-primary hover:bg-surface-container rounded-full w-full mt-2">
+      <span class="material-symbols-outlined text-lg">add_circle</span>
+      <span>Add Goal</span>
+    </button>
+  </nav>
+
+  <!-- Bottom Actions -->
+  <div class="mt-auto space-y-2 pt-6">
+    <!-- Import Feeds CTA -->
+    <button class="w-full bg-primary text-on-primary py-4 rounded-xl font-bold text-sm tracking-wide editorial-shadow flex items-center justify-center gap-2">
+      <span class="material-symbols-outlined text-sm">upload</span>
+      Import Feeds
+    </button>
+
+    <div class="mt-6 pt-6 space-y-1" style="border-top: 1px solid rgba(173,179,178,0.15)">
+      <a href="#" class="flex items-center gap-4 px-4 py-2 text-on-surface-variant hover:bg-surface-container rounded-full text-sm">
+        <span class="material-symbols-outlined text-lg">settings</span>
+        <span>Settings</span>
+      </a>
+    </div>
+  </div>
+</aside>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     HEADER — Top Bar
+     ═══════════════════════════════════════════════════════════ -->
+<header class="fixed top-0 right-0 w-[calc(100%-280px)] bg-background flex justify-between items-center px-12 h-20 ml-[280px] z-40">
+  <div class="flex items-center gap-3">
+    <span class="material-symbols-outlined text-outline text-lg">wb_sunny</span>
+    <span class="text-sm font-light text-on-surface-variant">Good morning</span>
+  </div>
+  <div class="flex items-center gap-4">
+    <button class="text-on-surface-variant hover:text-primary">
+      <span class="material-symbols-outlined">notifications</span>
+    </button>
+    <button onclick="document.documentElement.classList.toggle('dark')" class="text-on-surface-variant hover:text-primary" title="Toggle theme">
+      <span class="material-symbols-outlined">dark_mode</span>
+    </button>
+  </div>
+</header>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN CONTENT — POPULATED STATE
+     ═══════════════════════════════════════════════════════════ -->
+<main class="ml-[280px] pt-28 pb-20 px-12 min-h-screen">
+<div class="state-panel active" data-state="populated">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 max-w-7xl mx-auto">
+
+    <!-- ─── Left Column: Goal Content ─── -->
+    <div class="lg:col-span-8 space-y-12">
+
+      <!-- Goal Header -->
+      <section class="space-y-3">
+        <div class="flex items-center gap-3">
+          <span class="text-3xl">📚</span>
+          <div>
+            <h1 class="text-3xl font-headline font-extrabold text-on-surface tracking-tight">Learn Photography</h1>
+            <p class="text-sm text-on-surface-variant font-light mt-1">Curated content for your goal</p>
+          </div>
+        </div>
+        <!-- Goal Actions (editorial style: subtle, right-aligned) -->
+        <div class="flex items-center gap-4 mt-2">
+          <button class="flex items-center gap-2 text-sm text-on-surface-variant hover:text-primary font-label">
+            <span class="material-symbols-outlined text-lg">edit</span>
+            Edit Goal
+          </button>
+          <button class="flex items-center gap-2 text-sm text-on-surface-variant hover:text-error font-label">
+            <span class="material-symbols-outlined text-lg">delete</span>
+            Delete
+          </button>
+        </div>
+      </section>
+
+      <!-- Saved Pages Section -->
+      <section class="space-y-5">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-primary text-lg">bookmark</span>
+          <h3 class="text-lg font-headline font-bold text-on-surface tracking-tight">Saved Pages</h3>
+          <span class="text-xs font-label font-bold text-primary bg-primary-container px-2 py-1 rounded">4 PAGES</span>
+        </div>
+
+        <div class="space-y-2">
+          <!-- Saved Page Item 1 — Favorite -->
+          <div class="flex items-center gap-4 p-4 rounded-lg bg-surface-container-lowest editorial-shadow hover:bg-surface-container-low group cursor-pointer">
+            <img src="https://www.google.com/s2/favicons?domain=petapixel.com&sz=32" class="w-5 h-5 rounded" alt="" />
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-on-surface truncate">Understanding Exposure Triangle: The Complete Guide</p>
+              <div class="flex items-center gap-3 mt-1">
+                <span class="text-xs text-on-surface-variant font-label">petapixel.com</span>
+                <span class="text-[10px] font-label font-bold uppercase tracking-widest text-tertiary bg-tertiary-container px-2 py-0.5 rounded">Favorite</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+              <button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-lg">check_circle</span></button>
+              <button class="p-2 rounded-full hover:bg-surface-container text-tertiary"><span class="material-symbols-outlined filled text-lg">star</span></button>
+              <button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-lg">schedule</span></button>
+              <button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-error"><span class="material-symbols-outlined text-lg">delete</span></button>
+            </div>
+          </div>
+
+          <!-- Saved Page Item 2 — Unread (New) -->
+          <div class="flex items-center gap-4 p-4 rounded-lg bg-surface-container-lowest editorial-shadow hover:bg-surface-container-low group cursor-pointer">
+            <img src="https://www.google.com/s2/favicons?domain=youtube.com&sz=32" class="w-5 h-5 rounded" alt="" />
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-on-surface truncate">How to Shoot Street Photography — Masterclass</p>
+              <div class="flex items-center gap-3 mt-1">
+                <span class="text-xs text-on-surface-variant font-label">youtube.com</span>
+                <span class="text-[10px] font-label font-bold uppercase tracking-widest text-primary bg-primary-container px-2 py-0.5 rounded">New</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+              <button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-lg">check_circle</span></button>
+              <button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-tertiary"><span class="material-symbols-outlined text-lg">star</span></button>
+              <button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-lg">schedule</span></button>
+              <button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-error"><span class="material-symbols-outlined text-lg">delete</span></button>
+            </div>
+          </div>
+
+          <!-- Saved Page Item 3 — Viewed -->
+          <div class="flex items-center gap-4 p-4 rounded-lg bg-surface-container-lowest editorial-shadow hover:bg-surface-container-low group cursor-pointer">
+            <img src="https://www.google.com/s2/favicons?domain=reddit.com&sz=32" class="w-5 h-5 rounded" alt="" />
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-on-surface truncate">Best Budget Lenses for Portrait Photography in 2026</p>
+              <div class="flex items-center gap-3 mt-1">
+                <span class="text-xs text-on-surface-variant font-label">reddit.com</span>
+                <span class="text-[10px] font-label font-bold uppercase tracking-widest text-outline bg-surface-container px-2 py-0.5 rounded">Viewed</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+              <button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-tertiary"><span class="material-symbols-outlined text-lg">star</span></button>
+              <button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-lg">schedule</span></button>
+              <button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-error"><span class="material-symbols-outlined text-lg">delete</span></button>
+            </div>
+          </div>
+
+          <!-- Saved Page Item 4 — Watch Later -->
+          <div class="flex items-center gap-4 p-4 rounded-lg bg-surface-container-lowest editorial-shadow hover:bg-surface-container-low group cursor-pointer">
+            <img src="https://www.google.com/s2/favicons?domain=dpreview.com&sz=32" class="w-5 h-5 rounded" alt="" />
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-on-surface truncate">Fujifilm X-T6 In-Depth Review: The Hybrid King?</p>
+              <div class="flex items-center gap-3 mt-1">
+                <span class="text-xs text-on-surface-variant font-label">dpreview.com</span>
+                <span class="text-[10px] font-label font-bold uppercase tracking-widest text-primary-dim bg-inverse-primary px-2 py-0.5 rounded">Watch Later</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+              <button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-lg">check_circle</span></button>
+              <button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-tertiary"><span class="material-symbols-outlined text-lg">star</span></button>
+              <button class="p-2 rounded-full hover:bg-surface-container text-primary"><span class="material-symbols-outlined filled text-lg">schedule</span></button>
+              <button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-error"><span class="material-symbols-outlined text-lg">delete</span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Curated Content Section -->
+      <section class="space-y-6">
+        <div class="flex justify-between items-end">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary text-lg">auto_awesome</span>
+            <h3 class="text-lg font-headline font-bold text-on-surface tracking-tight">Curated Content</h3>
+          </div>
+          <button class="flex items-center gap-2 text-sm font-label text-primary font-semibold hover:text-primary-dim">
+            <span class="material-symbols-outlined text-sm">refresh</span>
+            Refresh
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <!-- Content Card 1 — RSS -->
+          <div class="bg-surface-container-lowest rounded-lg p-6 editorial-shadow hover:editorial-shadow-hover group cursor-pointer">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary text-lg">rss_feed</span>
+              </div>
+              <span class="text-xs font-label text-on-surface-variant">petapixel.com</span>
+            </div>
+            <h4 class="text-base font-headline font-bold text-on-surface leading-snug mb-2 line-clamp-2 group-hover:text-primary">
+              Mastering Natural Light: A Photographer's Guide to Golden Hour
+            </h4>
+            <p class="text-sm text-on-surface-variant line-clamp-2 mb-4">Learn how to harness the magical qualities of golden hour light for portraits, landscapes, and street photography.</p>
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-outline text-sm">schedule</span>
+              <span class="text-xs font-label text-outline">7 min read</span>
+            </div>
+          </div>
+
+          <!-- Content Card 2 — YouTube -->
+          <div class="bg-surface-container-lowest rounded-lg p-6 editorial-shadow hover:editorial-shadow-hover group cursor-pointer">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center">
+                <span class="material-symbols-outlined text-error text-lg">play_circle</span>
+              </div>
+              <span class="text-xs font-label text-on-surface-variant">youtube.com</span>
+            </div>
+            <h4 class="text-base font-headline font-bold text-on-surface leading-snug mb-2 line-clamp-2 group-hover:text-primary">
+              Composition Rules That Actually Matter — Stop Overthinking
+            </h4>
+            <p class="text-sm text-on-surface-variant line-clamp-2 mb-4">Why the rule of thirds is just the beginning, and how leading lines can transform boring shots.</p>
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-outline text-sm">schedule</span>
+              <span class="text-xs font-label text-outline">12 min watch</span>
+            </div>
+          </div>
+
+          <!-- Content Card 3 — Reddit -->
+          <div class="bg-surface-container-lowest rounded-lg p-6 editorial-shadow hover:editorial-shadow-hover group cursor-pointer">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center">
+                <span class="material-symbols-outlined text-tertiary text-lg">forum</span>
+              </div>
+              <span class="text-xs font-label text-on-surface-variant">r/photography</span>
+            </div>
+            <h4 class="text-base font-headline font-bold text-on-surface leading-snug mb-2 line-clamp-2 group-hover:text-primary">
+              Weekly Thread: Share Your Best Shot This Week
+            </h4>
+            <p class="text-sm text-on-surface-variant line-clamp-2 mb-4">Community showcase of the week's best photographs with constructive feedback.</p>
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-outline text-sm">schedule</span>
+              <span class="text-xs font-label text-outline">5 min read</span>
+            </div>
+          </div>
+
+          <!-- Content Card 4 — RSS -->
+          <div class="bg-surface-container-lowest rounded-lg p-6 editorial-shadow hover:editorial-shadow-hover group cursor-pointer">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary text-lg">rss_feed</span>
+              </div>
+              <span class="text-xs font-label text-on-surface-variant">fstoppers.com</span>
+            </div>
+            <h4 class="text-base font-headline font-bold text-on-surface leading-snug mb-2 line-clamp-2 group-hover:text-primary">
+              The Rise of Computational Photography: What It Means for Pros
+            </h4>
+            <p class="text-sm text-on-surface-variant line-clamp-2 mb-4">How smartphone AI is reshaping expectations and what traditional photographers should know.</p>
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-outline text-sm">schedule</span>
+              <span class="text-xs font-label text-outline">9 min read</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ─── Right Column: Insights Sidebar ─── -->
+    <div class="lg:col-span-4">
+      <div class="sticky top-28 space-y-8">
+
+        <!-- Content Sources Card -->
+        <div class="bg-surface-container-low p-6 rounded-lg space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-headline font-bold text-on-surface">Content Sources</h3>
+            <span class="text-xs font-label font-bold text-primary bg-primary-container px-2 py-1 rounded">3 FEEDS</span>
+          </div>
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <div class="w-7 h-7 rounded-full bg-surface-container-lowest flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary text-sm">rss_feed</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-on-surface truncate">petapixel.com/feed</p>
+                <p class="text-[10px] font-label text-outline uppercase tracking-widest">RSS</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-7 h-7 rounded-full bg-surface-container-lowest flex items-center justify-center">
+                <span class="material-symbols-outlined text-error text-sm">play_circle</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-on-surface truncate">@PeterMcKinnon</p>
+                <p class="text-[10px] font-label text-outline uppercase tracking-widest">YouTube</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-7 h-7 rounded-full bg-surface-container-lowest flex items-center justify-center">
+                <span class="material-symbols-outlined text-tertiary text-sm">forum</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-on-surface truncate">r/photography</p>
+                <p class="text-[10px] font-label text-outline uppercase tracking-widest">Reddit</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Editor's Tip / Insight Card -->
+        <div class="bg-tertiary-container p-6 rounded-lg relative overflow-hidden">
+          <span class="material-symbols-outlined absolute top-4 right-4 text-5xl text-tertiary opacity-10 rotate-12">format_quote</span>
+          <div class="flex items-start gap-3 relative z-10">
+            <span class="material-symbols-outlined text-primary filled">lightbulb</span>
+            <div>
+              <h4 class="text-[10px] font-label font-bold uppercase tracking-[0.2em] text-on-tertiary-container mb-2">Editor's Tip</h4>
+              <p class="text-sm text-on-tertiary-fixed-variant leading-relaxed">You've saved 4 photography articles this week. Consider blocking 30 minutes to review them during your peak focus hours.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="bg-surface-container-low p-6 rounded-lg space-y-4">
+          <h3 class="text-sm font-headline font-bold text-on-surface">This Week</h3>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="text-center">
+              <p class="text-2xl font-headline font-extrabold text-primary">12</p>
+              <p class="text-[10px] font-label text-outline uppercase tracking-widest mt-1">Articles Read</p>
+            </div>
+            <div class="text-center">
+              <p class="text-2xl font-headline font-extrabold text-primary">4</p>
+              <p class="text-[10px] font-label text-outline uppercase tracking-widest mt-1">Pages Saved</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN CONTENT — EMPTY STATE (No goals yet)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="state-panel" data-state="empty">
+  <div class="max-w-lg mx-auto text-center py-20">
+    <!-- Warm welcome block using tertiary container -->
+    <div class="bg-tertiary-container rounded-lg p-12 editorial-shadow relative overflow-hidden mb-10">
+      <span class="material-symbols-outlined absolute top-6 right-8 text-7xl text-tertiary opacity-10 rotate-12">spa</span>
+      <div class="relative z-10">
+        <span class="material-symbols-outlined text-primary text-4xl mb-4 block">self_improvement</span>
+        <h2 class="text-3xl font-headline font-extrabold text-on-tertiary-container tracking-tight mb-3">Welcome to Focus Guardian</h2>
+        <p class="text-base text-on-tertiary-fixed-variant leading-relaxed">
+          Your curated sanctuary for mindful browsing. Create your first goal to start collecting content that matters.
+        </p>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <button class="bg-primary text-on-primary px-8 py-4 rounded-xl font-bold text-base tracking-wide editorial-shadow flex items-center justify-center gap-3 mx-auto hover:bg-primary-dim">
+      <span class="material-symbols-outlined">add_circle</span>
+      Create Your First Goal
+    </button>
+
+    <!-- Subtle helper text -->
+    <p class="text-sm text-on-surface-variant mt-6 leading-relaxed max-w-sm mx-auto">
+      Goals help you organize content sources and saved pages around topics you care about.
+    </p>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN CONTENT — LOADING STATE
+     ═══════════════════════════════════════════════════════════ -->
+<div class="state-panel" data-state="loading">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 max-w-7xl mx-auto">
+    <div class="lg:col-span-8 space-y-12">
+      <!-- Goal Header Skeleton -->
+      <section class="space-y-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-surface-container-high animate-pulse"></div>
+          <div class="space-y-2">
+            <div class="h-7 w-56 bg-surface-container-high rounded animate-pulse"></div>
+            <div class="h-4 w-36 bg-surface-container rounded animate-pulse"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Saved Pages Skeleton -->
+      <section class="space-y-5">
+        <div class="h-5 w-32 bg-surface-container-high rounded animate-pulse"></div>
+        <div class="space-y-2">
+          <div class="h-16 rounded-lg bg-surface-container-lowest editorial-shadow animate-pulse"></div>
+          <div class="h-16 rounded-lg bg-surface-container-lowest editorial-shadow animate-pulse"></div>
+          <div class="h-16 rounded-lg bg-surface-container-lowest editorial-shadow animate-pulse"></div>
+        </div>
+      </section>
+
+      <!-- Content Cards Skeleton -->
+      <section class="space-y-6">
+        <div class="h-5 w-40 bg-surface-container-high rounded animate-pulse"></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div class="h-44 rounded-lg bg-surface-container-lowest editorial-shadow animate-pulse"></div>
+          <div class="h-44 rounded-lg bg-surface-container-lowest editorial-shadow animate-pulse"></div>
+          <div class="h-44 rounded-lg bg-surface-container-lowest editorial-shadow animate-pulse"></div>
+          <div class="h-44 rounded-lg bg-surface-container-lowest editorial-shadow animate-pulse"></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="lg:col-span-4">
+      <div class="sticky top-28 space-y-8">
+        <div class="h-40 rounded-lg bg-surface-container-low animate-pulse"></div>
+        <div class="h-32 rounded-lg bg-surface-container-low animate-pulse"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</main>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     GOAL FORM MODAL — Glassmorphism Overlay
+     ═══════════════════════════════════════════════════════════ -->
+<div id="goal-form-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-on-surface/10 backdrop-blur-sm"></div>
+
+  <!-- Modal Card -->
+  <div class="relative bg-surface-container-lowest rounded-lg editorial-shadow p-10 w-full max-w-md mx-4" style="box-shadow: 0 24px 64px rgba(45,52,51,0.1)">
+    <!-- Close -->
+    <button class="absolute top-6 right-6 text-outline hover:text-on-surface">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+
+    <h2 class="text-2xl font-headline font-extrabold text-on-surface mb-8">Add New Goal</h2>
+
+    <!-- Title Input -->
+    <div class="mb-6">
+      <label class="block text-[10px] font-label uppercase tracking-[0.2em] text-on-surface-variant mb-2 font-semibold">Goal Title</label>
+      <input
+        type="text"
+        placeholder="e.g., Learn Photography"
+        class="w-full px-5 py-4 bg-surface-container-low rounded-xl text-on-surface placeholder:text-outline font-body focus:outline-none focus:ring-2 focus:ring-primary/30 border-none"
+      />
+    </div>
+
+    <!-- Icon Picker -->
+    <div class="mb-6">
+      <label class="block text-[10px] font-label uppercase tracking-[0.2em] text-on-surface-variant mb-3 font-semibold">Icon</label>
+      <div class="flex flex-wrap gap-2">
+        <button class="w-11 h-11 rounded-xl text-xl flex items-center justify-center bg-primary-container ring-2 ring-primary">📚</button>
+        <button class="w-11 h-11 rounded-xl text-xl flex items-center justify-center bg-surface-container-low hover:bg-surface-container">💻</button>
+        <button class="w-11 h-11 rounded-xl text-xl flex items-center justify-center bg-surface-container-low hover:bg-surface-container">🎯</button>
+        <button class="w-11 h-11 rounded-xl text-xl flex items-center justify-center bg-surface-container-low hover:bg-surface-container">🏋️</button>
+        <button class="w-11 h-11 rounded-xl text-xl flex items-center justify-center bg-surface-container-low hover:bg-surface-container">🎨</button>
+        <button class="w-11 h-11 rounded-xl text-xl flex items-center justify-center bg-surface-container-low hover:bg-surface-container">🎵</button>
+        <button class="w-11 h-11 rounded-xl text-xl flex items-center justify-center bg-surface-container-low hover:bg-surface-container">🌍</button>
+        <button class="w-11 h-11 rounded-xl text-xl flex items-center justify-center bg-surface-container-low hover:bg-surface-container">📷</button>
+        <button class="w-11 h-11 rounded-xl text-xl flex items-center justify-center bg-surface-container-low hover:bg-surface-container">✍️</button>
+        <button class="w-11 h-11 rounded-xl text-xl flex items-center justify-center bg-surface-container-low hover:bg-surface-container">🧘</button>
+        <button class="w-11 h-11 rounded-xl text-xl flex items-center justify-center bg-surface-container-low hover:bg-surface-container">💡</button>
+        <button class="w-11 h-11 rounded-xl text-xl flex items-center justify-center bg-surface-container-low hover:bg-surface-container">🚀</button>
+      </div>
+    </div>
+
+    <!-- Color Picker -->
+    <div class="mb-6">
+      <label class="block text-[10px] font-label uppercase tracking-[0.2em] text-on-surface-variant mb-3 font-semibold">Color</label>
+      <div class="flex gap-3">
+        <button class="w-9 h-9 rounded-full ring-2 ring-offset-2 ring-on-surface-variant scale-110" style="background:#4e6358"></button>
+        <button class="w-9 h-9 rounded-full hover:scale-105" style="background:#675e51"></button>
+        <button class="w-9 h-9 rounded-full hover:scale-105" style="background:#9f403d"></button>
+        <button class="w-9 h-9 rounded-full hover:scale-105" style="background:#6366f1"></button>
+        <button class="w-9 h-9 rounded-full hover:scale-105" style="background:#f97316"></button>
+        <button class="w-9 h-9 rounded-full hover:scale-105" style="background:#eab308"></button>
+        <button class="w-9 h-9 rounded-full hover:scale-105" style="background:#22c55e"></button>
+        <button class="w-9 h-9 rounded-full hover:scale-105" style="background:#14b8a6"></button>
+      </div>
+    </div>
+
+    <!-- Content Sources -->
+    <div class="mb-8">
+      <label class="block text-[10px] font-label uppercase tracking-[0.2em] text-on-surface-variant mb-3 font-semibold">Content Sources</label>
+
+      <!-- Existing source -->
+      <div class="flex items-center gap-3 mb-2 p-3 bg-surface-container-low rounded-xl">
+        <span class="text-[10px] font-label font-bold uppercase tracking-widest text-primary bg-primary-container px-2 py-1 rounded">RSS</span>
+        <span class="text-sm text-on-surface flex-1 truncate">petapixel.com/feed.xml</span>
+        <button class="text-outline hover:text-error"><span class="material-symbols-outlined text-lg">close</span></button>
+      </div>
+
+      <!-- Add new source -->
+      <div class="flex gap-2 mt-3">
+        <select class="px-3 py-3 bg-surface-container-low rounded-xl text-sm font-label text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 border-none">
+          <option>RSS</option>
+          <option>YouTube</option>
+          <option>Reddit</option>
+        </select>
+        <input
+          type="text"
+          placeholder="https://blog.example.com/feed.xml"
+          class="flex-1 px-4 py-3 bg-surface-container-low rounded-xl text-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/30 border-none"
+        />
+        <button class="w-11 h-11 bg-surface-container rounded-xl flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-high">
+          <span class="material-symbols-outlined">add</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex gap-3">
+      <button class="flex-1 px-6 py-4 text-on-surface-variant hover:bg-surface-container-low rounded-xl font-bold text-sm">
+        Cancel
+      </button>
+      <button class="flex-1 px-6 py-4 bg-primary text-on-primary rounded-xl font-bold text-sm editorial-shadow hover:bg-primary-dim">
+        Create Goal
+      </button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

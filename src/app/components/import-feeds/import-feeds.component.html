@@ -1,36 +1,35 @@
-<!-- Backdrop -->
+<!-- Backdrop — glassmorphism -->
 <div
-  class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+  class="fixed inset-0 bg-on-surface/10 backdrop-blur-sm flex items-center justify-center z-50 p-4"
   (click)="close()"
 >
   <!-- Modal -->
   <div
-    class="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-lg shadow-2xl max-h-[80vh] flex flex-col"
+    class="bg-surface-container-lowest rounded-lg w-full max-w-lg max-h-[80vh] flex flex-col"
+    style="box-shadow: 0 24px 64px rgba(45,52,51,0.1)"
     (click)="$event.stopPropagation()"
   >
     <!-- ===== INPUT STATE ===== -->
     @if (state() === 'input') {
       <!-- Header -->
-      <div class="flex items-center justify-between p-5 border-b border-gray-800">
-        <h2 class="text-lg font-semibold text-gray-100">Import RSS Feeds</h2>
-        <button class="text-gray-400 hover:text-gray-200" (click)="close()">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
+      <div class="flex items-center justify-between p-6">
+        <h2 class="text-lg font-headline font-bold text-on-surface">Import RSS Feeds</h2>
+        <button class="text-outline hover:text-on-surface" (click)="close()">
+          <span class="material-symbols-outlined">close</span>
         </button>
       </div>
 
-      <!-- Tabs -->
-      <div class="flex border-b border-gray-800">
+      <!-- Tabs — tonal shift instead of border -->
+      <div class="flex bg-surface-container-low mx-6 rounded-xl p-1">
         <button
           (click)="activeTab.set('opml')"
-          [class]="'flex-1 py-3 text-sm font-medium ' + (activeTab() === 'opml' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-gray-500 hover:text-gray-300')"
+          [class]="'flex-1 py-2.5 text-sm font-label font-semibold rounded-lg ' + (activeTab() === 'opml' ? 'bg-surface-container-lowest text-primary editorial-shadow' : 'text-on-surface-variant hover:text-on-surface')"
         >
           Upload OPML
         </button>
         <button
           (click)="activeTab.set('urls')"
-          [class]="'flex-1 py-3 text-sm font-medium ' + (activeTab() === 'urls' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-gray-500 hover:text-gray-300')"
+          [class]="'flex-1 py-2.5 text-sm font-label font-semibold rounded-lg ' + (activeTab() === 'urls' ? 'bg-surface-container-lowest text-primary editorial-shadow' : 'text-on-surface-variant hover:text-on-surface')"
         >
           Paste URLs
         </button>
@@ -38,27 +37,25 @@
 
       <!-- OPML Upload Tab -->
       @if (activeTab() === 'opml') {
-        <div class="p-5">
+        <div class="p-6">
           <div
-            class="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center hover:border-indigo-500 transition-colors cursor-pointer"
+            class="bg-surface-container-low rounded-xl p-8 text-center hover:bg-surface-container cursor-pointer"
             (click)="fileInput.click()"
             (dragover)="onDragOver($event)"
             (dragleave)="onDragLeave($event)"
             (drop)="onDrop($event)"
-            [class.border-indigo-500]="isDragging()"
+            [class.bg-primary-container]="isDragging()"
           >
-            <svg class="w-10 h-10 mx-auto text-gray-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-            </svg>
+            <span class="material-symbols-outlined text-outline text-4xl mb-3 block">cloud_upload</span>
             @if (selectedFileName()) {
-              <p class="text-indigo-400 text-sm font-medium">{{ selectedFileName() }}</p>
-              <p class="text-gray-500 text-xs mt-1">Click or drop to replace</p>
+              <p class="text-primary text-sm font-semibold">{{ selectedFileName() }}</p>
+              <p class="text-on-surface-variant text-xs mt-1">Click or drop to replace</p>
             } @else {
-              <p class="text-gray-300 text-sm font-medium">Drop OPML file here or click to browse</p>
-              <p class="text-gray-500 text-xs mt-1">Supports .opml and .xml files</p>
+              <p class="text-on-surface text-sm font-semibold">Drop OPML file here or click to browse</p>
+              <p class="text-on-surface-variant text-xs mt-1">Supports .opml and .xml files</p>
             }
           </div>
-          <p class="text-gray-500 text-xs mt-3">Export OPML from Feedly, Inoreader, or any feed reader.</p>
+          <p class="text-on-surface-variant text-xs mt-3 font-label">Export OPML from Feedly, Inoreader, or any feed reader.</p>
           <input
             #fileInput
             type="file"
@@ -71,25 +68,26 @@
 
       <!-- Paste URLs Tab -->
       @if (activeTab() === 'urls') {
-        <div class="p-5">
+        <div class="p-6">
           <textarea
             rows="6"
-            class="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-indigo-500 resize-none"
+            class="w-full bg-surface-container-low rounded-xl p-4 text-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none font-body"
             placeholder="Paste RSS feed URLs, one per line:&#10;https://example.com/feed.xml&#10;https://blog.example.com/rss&#10;..."
             [value]="urlText()"
             (input)="urlText.set($any($event.target).value)"
           ></textarea>
-          <p class="text-gray-500 text-xs mt-2">One URL per line. Blank lines are ignored.</p>
+          <p class="text-on-surface-variant text-xs mt-2 font-label">One URL per line. Blank lines are ignored.</p>
         </div>
       }
 
       <!-- Footer -->
-      <div class="flex justify-end gap-3 p-5 border-t border-gray-800">
-        <button class="px-4 py-2 text-sm text-gray-400 hover:text-gray-200" (click)="close()">Cancel</button>
+      <div class="flex justify-end gap-3 p-6">
+        <button class="px-5 py-3 text-sm text-on-surface-variant hover:text-on-surface font-semibold rounded-xl hover:bg-surface-container-low" (click)="close()">Cancel</button>
         <button
           (click)="onParse()"
           [disabled]="!canParse()"
-          [class]="'px-4 py-2 text-sm text-white rounded-lg ' + (canParse() ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-indigo-600 opacity-50 cursor-not-allowed')"
+          class="px-5 py-3 text-sm text-on-primary font-bold rounded-xl editorial-shadow"
+          [class]="canParse() ? 'bg-primary hover:bg-primary-dim' : 'bg-primary opacity-50 cursor-not-allowed'"
         >
           {{ activeTab() === 'opml' ? 'Import' : 'Parse Feeds' }}
         </button>
@@ -98,74 +96,75 @@
 
     <!-- ===== PARSING STATE ===== -->
     @if (state() === 'parsing') {
-      <div class="p-8 text-center">
-        <div class="animate-spin h-8 w-8 border-2 border-indigo-500 border-t-transparent rounded-full mx-auto"></div>
-        <p class="text-gray-300 mt-4">Parsing OPML file...</p>
+      <div class="p-10 text-center">
+        <div class="animate-spin h-8 w-8 rounded-full mx-auto" style="border: 2px solid #d1e8da; border-top-color: #4e6358;"></div>
+        <p class="text-on-surface-variant mt-4 font-label">Parsing feeds...</p>
       </div>
     }
 
     <!-- ===== PREVIEW STATE ===== -->
     @if (state() === 'preview') {
       <!-- Header -->
-      <div class="flex items-center justify-between p-5 border-b border-gray-800">
+      <div class="flex items-center justify-between p-6">
         <div>
-          <h2 class="text-lg font-semibold text-gray-100">Preview Feeds</h2>
-          <p class="text-gray-500 text-sm mt-1">{{ parsedFeeds().length }} feeds found · {{ duplicateCount() }} duplicates skipped</p>
+          <h2 class="text-lg font-headline font-bold text-on-surface">Preview Feeds</h2>
+          <p class="text-on-surface-variant text-sm mt-1 font-label">{{ parsedFeeds().length }} feeds found · {{ duplicateCount() }} duplicates skipped</p>
         </div>
-        <button class="text-gray-400 hover:text-gray-200" (click)="close()">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
+        <button class="text-outline hover:text-on-surface" (click)="close()">
+          <span class="material-symbols-outlined">close</span>
         </button>
       </div>
 
       <!-- Select all -->
-      <div class="px-5 py-3 border-b border-gray-800 flex items-center gap-3">
+      <div class="px-6 py-3 bg-surface-container-low flex items-center gap-3">
         <input
           type="checkbox"
           [checked]="allSelected()"
           (change)="toggleSelectAll()"
-          class="w-4 h-4 rounded bg-gray-800 border-gray-600 text-indigo-600 focus:ring-indigo-500"
+          class="w-4 h-4 rounded bg-surface-container-low text-primary focus:ring-primary/30 accent-primary"
         />
-        <span class="text-sm text-gray-400">Select all ({{ selectableFeeds().length }})</span>
+        <span class="text-sm text-on-surface-variant font-label">Select all ({{ selectableFeeds().length }})</span>
       </div>
 
       <!-- Feed list -->
-      <div class="overflow-y-auto flex-1 divide-y divide-gray-800/50">
+      <div class="overflow-y-auto flex-1">
         @for (feed of selectableFeeds(); track feed.url) {
-          <label class="flex items-start gap-3 px-5 py-3 hover:bg-gray-800/50 cursor-pointer">
+          <label class="flex items-start gap-3 px-6 py-3 hover:bg-surface-container-low cursor-pointer">
             <input
               type="checkbox"
               [checked]="selectedUrls().has(feed.url)"
               (change)="toggleFeed(feed.url)"
-              class="w-4 h-4 mt-0.5 rounded bg-gray-800 border-gray-600 text-indigo-600 focus:ring-indigo-500"
+              class="w-4 h-4 mt-0.5 rounded bg-surface-container-low text-primary focus:ring-primary/30 accent-primary"
             />
             <div class="flex-1 min-w-0">
-              <p class="text-sm text-gray-200 truncate">{{ feed.title }}</p>
-              <p class="text-xs text-gray-500 truncate">{{ feed.url }}</p>
+              <p class="text-sm text-on-surface truncate">{{ feed.title }}</p>
+              <p class="text-xs text-on-surface-variant truncate font-label">{{ feed.url }}</p>
             </div>
           </label>
         }
         @for (feed of duplicateFeeds(); track feed.url) {
-          <div class="flex items-start gap-3 px-5 py-3 opacity-50">
-            <input type="checkbox" disabled class="w-4 h-4 mt-0.5 rounded bg-gray-800 border-gray-600" />
+          <div class="flex items-start gap-3 px-6 py-3 opacity-40">
+            <input type="checkbox" disabled class="w-4 h-4 mt-0.5 rounded" />
             <div class="flex-1 min-w-0">
-              <p class="text-sm text-gray-400 truncate">{{ feed.title }} <span class="text-xs text-yellow-500 ml-2">Already added</span></p>
-              <p class="text-xs text-gray-600 truncate">{{ feed.url }}</p>
+              <p class="text-sm text-on-surface-variant truncate">{{ feed.title }}
+                <span class="text-[10px] font-label font-bold uppercase tracking-widest text-tertiary ml-2">Already added</span>
+              </p>
+              <p class="text-xs text-outline truncate font-label">{{ feed.url }}</p>
             </div>
           </div>
         }
       </div>
 
       <!-- Footer -->
-      <div class="flex items-center justify-between p-5 border-t border-gray-800">
-        <span class="text-sm text-gray-500">{{ selectedCount() }} selected</span>
+      <div class="flex items-center justify-between p-6">
+        <span class="text-sm text-on-surface-variant font-label">{{ selectedCount() }} selected</span>
         <div class="flex gap-3">
-          <button class="px-4 py-2 text-sm text-gray-400 hover:text-gray-200" (click)="close()">Cancel</button>
+          <button class="px-5 py-3 text-sm text-on-surface-variant hover:text-on-surface font-semibold rounded-xl hover:bg-surface-container-low" (click)="close()">Cancel</button>
           <button
             (click)="onImport()"
             [disabled]="selectedCount() === 0"
-            [class]="'px-4 py-2 text-sm text-white rounded-lg ' + (selectedCount() > 0 ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-indigo-600 opacity-50 cursor-not-allowed')"
+            class="px-5 py-3 text-sm text-on-primary font-bold rounded-xl editorial-shadow"
+            [class]="selectedCount() > 0 ? 'bg-primary hover:bg-primary-dim' : 'bg-primary opacity-50 cursor-not-allowed'"
           >
             Import {{ selectedCount() }} Feeds
           </button>
@@ -175,22 +174,20 @@
 
     <!-- ===== SUCCESS STATE ===== -->
     @if (state() === 'success') {
-      <div class="p-8 text-center">
-        <div class="w-12 h-12 bg-green-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-          </svg>
+      <div class="p-10 text-center">
+        <div class="w-14 h-14 bg-primary-container rounded-full flex items-center justify-center mx-auto mb-4">
+          <span class="material-symbols-outlined text-primary text-2xl">check_circle</span>
         </div>
-        <h3 class="text-lg font-semibold text-gray-100">Feeds Imported</h3>
+        <h3 class="text-lg font-headline font-bold text-on-surface">Feeds Imported</h3>
         <div class="mt-3 space-y-1">
-          <p class="text-sm text-gray-300"><span class="text-green-400 font-medium">{{ importResult().added }} feeds</span> added successfully</p>
+          <p class="text-sm text-on-surface-variant"><span class="text-primary font-semibold">{{ importResult().added }} feeds</span> added successfully</p>
           @if (importResult().skipped > 0) {
-            <p class="text-sm text-gray-500">{{ importResult().skipped }} duplicates skipped</p>
+            <p class="text-sm text-outline font-label">{{ importResult().skipped }} duplicates skipped</p>
           }
         </div>
         <button
           (click)="close()"
-          class="mt-6 px-6 py-2 text-sm bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg"
+          class="mt-6 px-6 py-3 text-sm bg-primary hover:bg-primary-dim text-on-primary rounded-xl font-bold editorial-shadow"
         >
           Done
         </button>
@@ -199,17 +196,15 @@
 
     <!-- ===== ERROR: PARSE ===== -->
     @if (state() === 'error-parse') {
-      <div class="p-8 text-center">
-        <div class="w-12 h-12 bg-red-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
+      <div class="p-10 text-center">
+        <div class="w-14 h-14 bg-error-container/30 rounded-full flex items-center justify-center mx-auto mb-4">
+          <span class="material-symbols-outlined text-error text-2xl">error</span>
         </div>
-        <h3 class="text-lg font-semibold text-gray-100">Invalid File</h3>
-        <p class="text-sm text-gray-400 mt-2">The file could not be parsed as OPML. Make sure it's a valid .opml or .xml file exported from a feed reader.</p>
+        <h3 class="text-lg font-headline font-bold text-on-surface">Invalid File</h3>
+        <p class="text-sm text-on-surface-variant mt-2 leading-relaxed">The file could not be parsed as OPML. Make sure it's a valid .opml or .xml file exported from a feed reader.</p>
         <button
           (click)="resetToInput()"
-          class="mt-6 px-6 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg"
+          class="mt-6 px-6 py-3 text-sm bg-surface-container hover:bg-surface-container-high text-on-surface rounded-xl font-bold"
         >
           Try Again
         </button>
@@ -218,17 +213,15 @@
 
     <!-- ===== ERROR: EMPTY ===== -->
     @if (state() === 'error-empty') {
-      <div class="p-8 text-center">
-        <div class="w-12 h-12 bg-yellow-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-          </svg>
+      <div class="p-10 text-center">
+        <div class="w-14 h-14 bg-tertiary-container rounded-full flex items-center justify-center mx-auto mb-4">
+          <span class="material-symbols-outlined text-tertiary text-2xl">warning</span>
         </div>
-        <h3 class="text-lg font-semibold text-gray-100">No Feeds Found</h3>
-        <p class="text-sm text-gray-400 mt-2">The file was parsed but no RSS feeds were found. Make sure your OPML file contains RSS subscriptions.</p>
+        <h3 class="text-lg font-headline font-bold text-on-surface">No Feeds Found</h3>
+        <p class="text-sm text-on-surface-variant mt-2 leading-relaxed">The file was parsed but no RSS feeds were found. Make sure your OPML file contains RSS subscriptions.</p>
         <button
           (click)="resetToInput()"
-          class="mt-6 px-6 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg"
+          class="mt-6 px-6 py-3 text-sm bg-surface-container hover:bg-surface-container-high text-on-surface rounded-xl font-bold"
         >
           Try Again
         </button>

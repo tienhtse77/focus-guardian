@@ -4,96 +4,101 @@ import { FormsModule } from '@angular/forms';
 import { Goal, ContentSource } from '../../services/storage.service';
 
 const ICONS = ['📚', '💻', '🎯', '🏋️', '🎨', '🎵', '🌍', '📷', '✍️', '🧘', '💡', '🚀'];
-const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#22c55e', '#14b8a6'];
+const COLORS = ['#4e6358', '#675e51', '#9f403d', '#6366f1', '#f97316', '#eab308', '#22c55e', '#14b8a6'];
 
 @Component({
   selector: 'app-goal-form',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  styles: [`:host { display: contents; }`],
   template: `
-    <!-- Backdrop -->
-    <div 
-      class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 overflow-y-auto py-8"
+    <!-- Backdrop — glassmorphism -->
+    <div
+      class="fixed inset-0 bg-on-surface/10 backdrop-blur-sm flex items-center justify-center z-50 overflow-y-auto py-8"
       (click)="cancel.emit()"
     >
       <!-- Modal -->
-      <div 
-        class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md my-auto"
+      <div
+        class="relative bg-surface-container-lowest rounded-lg p-10 w-full max-w-md my-auto mx-4"
+        style="box-shadow: 0 24px 64px rgba(45,52,51,0.1)"
         (click)="$event.stopPropagation()"
       >
-        <h2 class="text-2xl font-serif text-gray-800 mb-6">
+        <!-- Close -->
+        <button (click)="cancel.emit()" class="absolute top-6 right-6 text-outline hover:text-on-surface">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+
+        <h2 class="text-2xl font-headline font-extrabold text-on-surface mb-8">
           {{ goal ? 'Edit Goal' : 'Add New Goal' }}
         </h2>
-        
+
         <!-- Title Input -->
-        <div class="mb-5">
-          <label class="block text-sm text-gray-500 mb-2">Goal Title</label>
+        <div class="mb-6">
+          <label class="block text-[10px] font-label uppercase tracking-[0.2em] text-on-surface-variant mb-2 font-semibold">Goal Title</label>
           <input
             type="text"
             [(ngModel)]="title"
             placeholder="e.g., Learn Photography"
-            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+            class="w-full px-5 py-4 bg-surface-container-low rounded-xl text-on-surface placeholder:text-outline font-body focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
-        
+
         <!-- Icon Picker -->
-        <div class="mb-5">
-          <label class="block text-sm text-gray-500 mb-2">Icon</label>
+        <div class="mb-6">
+          <label class="block text-[10px] font-label uppercase tracking-[0.2em] text-on-surface-variant mb-3 font-semibold">Icon</label>
           <div class="flex flex-wrap gap-2">
             @for (icon of icons; track icon) {
               <button
                 type="button"
                 (click)="selectedIcon.set(icon)"
-                [class]="'w-10 h-10 rounded-xl text-xl flex items-center justify-center transition-all ' +
-                  (selectedIcon() === icon ? 'bg-indigo-50 ring-2 ring-indigo-400' : 'bg-gray-50 hover:bg-gray-100')"
+                [class]="'w-11 h-11 rounded-xl text-xl flex items-center justify-center ' +
+                  (selectedIcon() === icon ? 'bg-primary-container ring-2 ring-primary' : 'bg-surface-container-low hover:bg-surface-container')"
               >
                 {{ icon }}
               </button>
             }
           </div>
         </div>
-        
+
         <!-- Color Picker -->
-        <div class="mb-5">
-          <label class="block text-sm text-gray-500 mb-2">Color</label>
-          <div class="flex gap-2">
+        <div class="mb-6">
+          <label class="block text-[10px] font-label uppercase tracking-[0.2em] text-on-surface-variant mb-3 font-semibold">Color</label>
+          <div class="flex gap-3">
             @for (color of colors; track color) {
               <button
                 type="button"
                 (click)="selectedColor.set(color)"
                 [style.background-color]="color"
-                [class]="'w-8 h-8 rounded-full transition-all ' +
-                  (selectedColor() === color ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : 'hover:scale-105')"
+                [class]="'w-9 h-9 rounded-full ' +
+                  (selectedColor() === color ? 'ring-2 ring-offset-2 ring-on-surface-variant scale-110' : 'hover:scale-105')"
               ></button>
             }
           </div>
         </div>
-        
+
         <!-- Content Sources -->
-        <div class="mb-6">
-          <label class="block text-sm text-gray-500 mb-2">Content Sources</label>
-          
+        <div class="mb-8">
+          <label class="block text-[10px] font-label uppercase tracking-[0.2em] text-on-surface-variant mb-3 font-semibold">Content Sources</label>
+
           <!-- Existing Sources -->
           @for (source of sources(); track $index) {
-            <div class="flex items-center gap-2 mb-2">
-              <span class="text-xs px-2 py-1 rounded-lg" 
-                [class]="source.type === 'rss' ? 'bg-orange-100 text-orange-700' : 
-                         source.type === 'youtube' ? 'bg-red-100 text-red-700' : 
-                         'bg-blue-100 text-blue-700'">
+            <div class="flex items-center gap-3 mb-2 p-3 bg-surface-container-low rounded-xl">
+              <span class="text-[10px] font-label font-bold uppercase tracking-widest px-2 py-1 rounded"
+                [class]="source.type === 'rss' ? 'text-primary bg-primary-container' :
+                         source.type === 'youtube' ? 'text-error bg-error-container/30' :
+                         'text-tertiary bg-tertiary-container'">
                 {{ source.type }}
               </span>
-              <span class="text-sm text-gray-600 flex-1 truncate">{{ source.url }}</span>
-              <button type="button" (click)="removeSource($index)" class="text-gray-400 hover:text-red-500">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
+              <span class="text-sm text-on-surface flex-1 truncate">{{ source.url }}</span>
+              <button type="button" (click)="removeSource($index)" class="text-outline hover:text-error">
+                <span class="material-symbols-outlined text-lg">close</span>
               </button>
             </div>
           }
-          
+
           <!-- Add New Source -->
-          <div class="flex gap-2 mt-2">
-            <select [(ngModel)]="newSourceType" class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200">
+          <div class="flex gap-2 mt-3">
+            <select [(ngModel)]="newSourceType" class="px-3 py-3 bg-surface-container-low rounded-xl text-sm font-label text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30">
               <option value="rss">RSS</option>
               <option value="youtube">YouTube</option>
               <option value="reddit">Reddit</option>
@@ -102,25 +107,25 @@ const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#eab308'
               type="text"
               [(ngModel)]="newSourceUrl"
               [placeholder]="getPlaceholder()"
-              class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              class="flex-1 px-4 py-3 bg-surface-container-low rounded-xl text-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
-            <button 
+            <button
               type="button"
-              (click)="addSource()" 
+              (click)="addSource()"
               [disabled]="!newSourceUrl.trim()"
-              class="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors"
+              class="w-11 h-11 bg-surface-container rounded-xl flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-high disabled:opacity-50"
             >
-              +
+              <span class="material-symbols-outlined">add</span>
             </button>
           </div>
         </div>
-        
+
         <!-- Actions -->
         <div class="flex gap-3">
           <button
             type="button"
             (click)="cancel.emit()"
-            class="flex-1 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl transition-colors"
+            class="flex-1 px-6 py-4 text-on-surface-variant hover:bg-surface-container-low rounded-xl font-bold text-sm"
           >
             Cancel
           </button>
@@ -128,7 +133,7 @@ const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#eab308'
             type="button"
             (click)="onSave()"
             [disabled]="!title.trim()"
-            class="flex-1 px-4 py-3 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            class="flex-1 px-6 py-4 bg-primary text-on-primary rounded-xl font-bold text-sm editorial-shadow hover:bg-primary-dim disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {{ goal ? 'Save Changes' : 'Create Goal' }}
           </button>
@@ -191,4 +196,3 @@ export class GoalFormComponent implements OnInit {
     });
   }
 }
-
