@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter, signal, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ContentSource, StorageService } from '../../services/storage.service';
+import { ContentSource } from '../../services/storage.service';
+import { ApiService } from '../../services/api.service';
 import { ParsedFeed, parseOpml, parseUrlList } from '../../services/opml-parser';
 
 type ModalState = 'input' | 'parsing' | 'preview' | 'success' | 'error-parse' | 'error-empty';
@@ -18,7 +19,7 @@ export class ImportFeedsComponent {
   @Output() imported = new EventEmitter<{ added: number; skipped: number }>();
   @Output() closed = new EventEmitter<void>();
 
-  private storageService = new StorageService();
+  private api = inject(ApiService);
 
   state = signal<ModalState>('input');
   activeTab = signal<'opml' | 'urls'>('opml');
@@ -174,7 +175,7 @@ export class ImportFeedsComponent {
     const selected = this.selectableFeeds().filter(f => this.selectedUrls().has(f.url));
     const sources: ContentSource[] = selected.map(f => ({ type: f.type, url: f.url }));
 
-    const result = await this.storageService.bulkAddSources(this.goalId, sources);
+    const result = await this.api.bulkAddSources(this.goalId, sources);
     this.importResult.set(result);
     this.imported.emit(result);
     this.state.set('success');

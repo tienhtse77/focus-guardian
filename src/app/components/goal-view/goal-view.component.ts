@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter, signal, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Goal, Content, SavedPage, PageStatus, StorageService } from '../../services/storage.service';
+import { Goal, Content, SavedPage, PageStatus } from '../../services/storage.service';
 import { ContentAggregatorService } from '../../services/content-aggregator.service';
+import { ApiService } from '../../services/api.service';
 import { ContentCardComponent } from '../content-card/content-card.component';
 import { SavedPageCardComponent } from '../saved-page-card/saved-page-card.component';
 import { ImportFeedsComponent } from '../import-feeds/import-feeds.component';
@@ -199,7 +200,7 @@ export class GoalViewComponent implements OnInit, OnChanges {
   @Output() editClicked = new EventEmitter<void>();
   @Output() deleteClicked = new EventEmitter<void>();
 
-  private storageService = new StorageService();
+  private api = inject(ApiService);
   private contentAggregator = new ContentAggregatorService();
 
   content = signal<Content[]>([]);
@@ -221,12 +222,12 @@ export class GoalViewComponent implements OnInit, OnChanges {
   }
 
   async loadContent() {
-    const items = await this.storageService.getContent(this.goal.id);
+    const items = await this.api.getContent(this.goal.id);
     this.content.set(items.filter(c => !c.consumed).slice(0, 4));
   }
 
   async loadSavedPages() {
-    const pages = await this.storageService.getSavedPages(this.goal.id);
+    const pages = await this.api.getSavedPages(this.goal.id);
     pages.sort((a, b) => {
       if (a.status === 'favorite' && b.status !== 'favorite') return -1;
       if (b.status === 'favorite' && a.status !== 'favorite') return 1;
@@ -245,14 +246,19 @@ export class GoalViewComponent implements OnInit, OnChanges {
         this.goal.sources
       );
 
-      const allContent = await this.storageService.getContent();
-      const otherContent = allContent.filter(c => c.goalId !== this.goal.id);
-      const updatedContent = [...otherContent, ...newContent];
-
-      if (typeof chrome !== 'undefined' && chrome.storage?.sync) {
-        await chrome.storage.sync.set({ focus_guardian_content: updatedContent });
-      } else {
-        localStorage.setItem('focus_guardian_content', JSON.stringify(updatedContent));
+      // POST each fetched item to the API
+      for (const item of newContent) {
+        try {
+          await this.api.createContent(this.goal.id, {
+            title: item.title,
+            url: item.url,
+            thumbnail: item.thumbnail,
+            estimatedMin: item.estimatedMin,
+            source: item.source,
+          });
+        } catch (err) {
+          console.error('Failed to save content item:', err);
+        }
       }
 
       await this.loadContent();
@@ -264,24 +270,24 @@ export class GoalViewComponent implements OnInit, OnChanges {
   }
 
   async onContentClick(item: Content) {
-    await this.storageService.markConsumed(item.id);
+    await this.api.markConsumed(item.id);
     window.open(item.url, '_blank');
     await this.loadContent();
   }
 
   async onPageStatusChange(page: SavedPage, status: PageStatus) {
-    await this.storageService.updatePageStatus(page.id, status);
+    await this.api.updatePageStatus(page.id, status);
     await this.loadSavedPages();
   }
 
   async onPageDelete(page: SavedPage) {
-    await this.storageService.deleteSavedPage(page.id);
+    await this.api.deleteSavedPage(page.id);
     await this.loadSavedPages();
   }
 
   async onFeedsImported(result: { added: number; skipped: number }) {
     if (result.added > 0) {
-      const goals = await this.storageService.getGoals();
+      const goals = await this.api.getGoals();
       const updated = goals.find(g => g.id === this.goal.id);
       if (updated) {
         this.goal.sources = updated.sources;

@@ -1,9 +1,10 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { GoalViewComponent } from './components/goal-view/goal-view.component';
 import { GoalFormComponent } from './components/goal-form/goal-form.component';
-import { StorageService, Goal } from './services/storage.service';
+import { Goal } from './services/storage.service';
+import { ApiService } from './services/api.service';
 import { themeService } from './services/theme.service';
 
 @Component({
@@ -14,7 +15,7 @@ import { themeService } from './services/theme.service';
   styleUrl: './app.css'
 })
 export class App {
-  private storageService = new StorageService();
+  private api = inject(ApiService);
 
   goals = signal<Goal[]>([]);
   selectedGoalId = signal<string | null>(null);
@@ -55,7 +56,24 @@ export class App {
   }
 
   async loadGoals() {
-    const goals = await this.storageService.getGoals();
+    const goals = await this.api.getGoals();
+
+    // Apply local display order preference
+    const orderJson = localStorage.getItem('focus_guardian_goal_order');
+    if (orderJson) {
+      try {
+        const order: string[] = JSON.parse(orderJson);
+        const orderMap = new Map(order.map((id, idx) => [id, idx]));
+        goals.sort((a, b) => {
+          const ai = orderMap.get(a.id) ?? Number.MAX_SAFE_INTEGER;
+          const bi = orderMap.get(b.id) ?? Number.MAX_SAFE_INTEGER;
+          return ai - bi;
+        });
+      } catch {
+        // ignore corrupt local order
+      }
+    }
+
     this.goals.set(goals);
     if (goals.length > 0 && !this.selectedGoalId()) {
       this.selectedGoalId.set(goals[0].id);
@@ -84,9 +102,9 @@ export class App {
   async saveGoal(goalData: Omit<Goal, 'id'>) {
     const editing = this.editingGoal();
     if (editing) {
-      await this.storageService.updateGoal(editing.id, goalData);
+      await this.api.updateGoal(editing.id, goalData);
     } else {
-      const newGoal = await this.storageService.addGoal(goalData);
+      const newGoal = await this.api.createGoal(goalData);
       this.selectedGoalId.set(newGoal.id);
     }
     await this.loadGoals();
@@ -94,7 +112,7 @@ export class App {
   }
 
   async deleteGoal(goalId: string) {
-    await this.storageService.deleteGoal(goalId);
+    await this.api.deleteGoal(goalId);
     await this.loadGoals();
     if (this.selectedGoalId() === goalId) {
       this.selectedGoalId.set(this.goals()[0]?.id || null);
@@ -103,6 +121,6 @@ export class App {
 
   async reorderGoals(reorderedGoals: Goal[]) {
     this.goals.set(reorderedGoals);
-    await this.storageService.setGoals(reorderedGoals);
+    localStorage.setItem('focus_guardian_goal_order', JSON.stringify(reorderedGoals.map(g => g.id)));
   }
 }
