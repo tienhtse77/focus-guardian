@@ -14,8 +14,7 @@
       <!-- Header -->
       <div class="flex items-center justify-between p-6">
         <h2 class="text-lg font-headline font-bold text-on-surface">Import RSS Feeds</h2>
-        <button class="text-outline hover:text-on-surface" (click)="close()">
-          <span class="material-symbols-outlined">close</span>
+        <button class="text-outline hover:text-on-surface p-1 rounded-full hover:bg-surface-container transition-all duration-200" (click)="close()">          <span class="material-symbols-outlined">close</span>
         </button>
       </div>
 
@@ -23,13 +22,13 @@
       <div class="flex bg-surface-container-low mx-6 rounded-xl p-1">
         <button
           (click)="activeTab.set('opml')"
-          [class]="'flex-1 py-2.5 text-sm font-label font-semibold rounded-lg ' + (activeTab() === 'opml' ? 'bg-surface-container-lowest text-primary editorial-shadow' : 'text-on-surface-variant hover:text-on-surface')"
+          [class]="'flex-1 py-2.5 text-sm font-label font-semibold rounded-lg transition-all duration-200 ' + (activeTab() === 'opml' ? 'bg-surface-container-lowest text-primary editorial-shadow' : 'text-on-surface-variant hover:text-on-surface')"
         >
           Upload OPML
         </button>
         <button
           (click)="activeTab.set('urls')"
-          [class]="'flex-1 py-2.5 text-sm font-label font-semibold rounded-lg ' + (activeTab() === 'urls' ? 'bg-surface-container-lowest text-primary editorial-shadow' : 'text-on-surface-variant hover:text-on-surface')"
+          [class]="'flex-1 py-2.5 text-sm font-label font-semibold rounded-lg transition-all duration-200 ' + (activeTab() === 'urls' ? 'bg-surface-container-lowest text-primary editorial-shadow' : 'text-on-surface-variant hover:text-on-surface')"
         >
           Paste URLs
         </button>
@@ -39,7 +38,7 @@
       @if (activeTab() === 'opml') {
         <div class="p-6">
           <div
-            class="bg-surface-container-low rounded-xl p-8 text-center hover:bg-surface-container cursor-pointer"
+            class="bg-surface-container-low rounded-xl p-8 text-center hover:bg-surface-container cursor-pointer transition-all duration-200"
             (click)="fileInput.click()"
             (dragover)="onDragOver($event)"
             (dragleave)="onDragLeave($event)"
@@ -82,11 +81,11 @@
 
       <!-- Footer -->
       <div class="flex justify-end gap-3 p-6">
-        <button class="px-5 py-3 text-sm text-on-surface-variant hover:text-on-surface font-semibold rounded-xl hover:bg-surface-container-low" (click)="close()">Cancel</button>
+        <button class="px-5 py-3 text-sm text-on-surface-variant hover:text-on-surface font-semibold rounded-xl hover:bg-surface-container-low transition-all duration-200" (click)="close()">Cancel</button>
         <button
           (click)="onParse()"
           [disabled]="!canParse()"
-          class="px-5 py-3 text-sm text-on-primary font-bold rounded-xl editorial-shadow"
+          class="px-5 py-3 text-sm text-on-primary font-bold rounded-xl editorial-shadow tonal-lift"
           [class]="canParse() ? 'bg-primary hover:bg-primary-dim' : 'bg-primary opacity-50 cursor-not-allowed'"
         >
           {{ activeTab() === 'opml' ? 'Import' : 'Parse Feeds' }}
@@ -110,8 +109,7 @@
           <h2 class="text-lg font-headline font-bold text-on-surface">Preview Feeds</h2>
           <p class="text-on-surface-variant text-sm mt-1 font-label">{{ parsedFeeds().length }} feeds found · {{ duplicateCount() }} duplicates skipped</p>
         </div>
-        <button class="text-outline hover:text-on-surface" (click)="close()">
-          <span class="material-symbols-outlined">close</span>
+        <button class="text-outline hover:text-on-surface p-1 rounded-full hover:bg-surface-container transition-all duration-200" (click)="close()">          <span class="material-symbols-outlined">close</span>
         </button>
       </div>
 
@@ -159,11 +157,11 @@
       <div class="flex items-center justify-between p-6">
         <span class="text-sm text-on-surface-variant font-label">{{ selectedCount() }} selected</span>
         <div class="flex gap-3">
-          <button class="px-5 py-3 text-sm text-on-surface-variant hover:text-on-surface font-semibold rounded-xl hover:bg-surface-container-low" (click)="close()">Cancel</button>
+          <button class="px-5 py-3 text-sm text-on-surface-variant hover:text-on-surface font-semibold rounded-xl hover:bg-surface-container-low transition-all duration-200" (click)="close()">Cancel</button>
           <button
             (click)="onImport()"
             [disabled]="selectedCount() === 0"
-            class="px-5 py-3 text-sm text-on-primary font-bold rounded-xl editorial-shadow"
+            class="px-5 py-3 text-sm text-on-primary font-bold rounded-xl editorial-shadow tonal-lift"
             [class]="selectedCount() > 0 ? 'bg-primary hover:bg-primary-dim' : 'bg-primary opacity-50 cursor-not-allowed'"
           >
             Import {{ selectedCount() }} Feeds
@@ -187,7 +185,7 @@
         </div>
         <button
           (click)="close()"
-          class="mt-6 px-6 py-3 text-sm bg-primary hover:bg-primary-dim text-on-primary rounded-xl font-bold editorial-shadow"
+          class="mt-6 px-6 py-3 text-sm bg-primary hover:bg-primary-dim text-on-primary rounded-xl font-bold editorial-shadow tonal-lift"
         >
           Done
         </button>
@@ -204,7 +202,7 @@
         <p class="text-sm text-on-surface-variant mt-2 leading-relaxed">The file could not be parsed as OPML. Make sure it's a valid .opml or .xml file exported from a feed reader.</p>
         <button
           (click)="resetToInput()"
-          class="mt-6 px-6 py-3 text-sm bg-surface-container hover:bg-surface-container-high text-on-surface rounded-xl font-bold"
+          class="mt-6 px-6 py-3 text-sm bg-surface-container hover:bg-surface-container-high text-on-surface rounded-xl font-bold transition-all duration-200"
         >
           Try Again
         </button>
@@ -221,7 +219,7 @@
         <p class="text-sm text-on-surface-variant mt-2 leading-relaxed">The file was parsed but no RSS feeds were found. Make sure your OPML file contains RSS subscriptions.</p>
         <button
           (click)="resetToInput()"
-          class="mt-6 px-6 py-3 text-sm bg-surface-container hover:bg-surface-container-high text-on-surface rounded-xl font-bold"
+          class="mt-6 px-6 py-3 text-sm bg-surface-container hover:bg-surface-container-high text-on-surface rounded-xl font-bold transition-all duration-200"
         >
           Try Again
         </button>

@@ -24,7 +24,7 @@ const COLORS = ['#4e6358', '#675e51', '#9f403d', '#6366f1', '#f97316', '#eab308'
         (click)="$event.stopPropagation()"
       >
         <!-- Close -->
-        <button (click)="cancel.emit()" class="absolute top-6 right-6 text-outline hover:text-on-surface">
+        <button (click)="cancel.emit()" class="absolute top-6 right-6 text-outline hover:text-on-surface p-1 rounded-full hover:bg-surface-container transition-all duration-200">
           <span class="material-symbols-outlined">close</span>
         </button>
 
@@ -51,8 +51,8 @@ const COLORS = ['#4e6358', '#675e51', '#9f403d', '#6366f1', '#f97316', '#eab308'
               <button
                 type="button"
                 (click)="selectedIcon.set(icon)"
-                [class]="'w-11 h-11 rounded-xl text-xl flex items-center justify-center ' +
-                  (selectedIcon() === icon ? 'bg-primary-container ring-2 ring-primary' : 'bg-surface-container-low hover:bg-surface-container')"
+                [class]="'w-11 h-11 rounded-xl text-xl flex items-center justify-center transition-all duration-200 ' +
+                  (selectedIcon() === icon ? 'bg-primary-container ring-2 ring-primary scale-110' : 'bg-surface-container-low hover:bg-surface-container hover:scale-105')"
               >
                 {{ icon }}
               </button>
@@ -69,8 +69,8 @@ const COLORS = ['#4e6358', '#675e51', '#9f403d', '#6366f1', '#f97316', '#eab308'
                 type="button"
                 (click)="selectedColor.set(color)"
                 [style.background-color]="color"
-                [class]="'w-9 h-9 rounded-full ' +
-                  (selectedColor() === color ? 'ring-2 ring-offset-2 ring-on-surface-variant scale-110' : 'hover:scale-105')"
+                [class]="'w-9 h-9 rounded-full transition-all duration-200 ' +
+                  (selectedColor() === color ? 'ring-2 ring-offset-2 ring-on-surface-variant scale-110' : 'hover:scale-110')"
               ></button>
             }
           </div>
@@ -90,7 +90,7 @@ const COLORS = ['#4e6358', '#675e51', '#9f403d', '#6366f1', '#f97316', '#eab308'
                 {{ source.type }}
               </span>
               <span class="text-sm text-on-surface flex-1 truncate">{{ source.url }}</span>
-              <button type="button" (click)="removeSource($index)" class="text-outline hover:text-error">
+              <button type="button" (click)="removeSource($index)" class="text-outline hover:text-error p-1 rounded-full hover:bg-error-container/20 transition-all duration-200">
                 <span class="material-symbols-outlined text-lg">close</span>
               </button>
             </div>
@@ -113,7 +113,7 @@ const COLORS = ['#4e6358', '#675e51', '#9f403d', '#6366f1', '#f97316', '#eab308'
               type="button"
               (click)="addSource()"
               [disabled]="!newSourceUrl.trim()"
-              class="w-11 h-11 bg-surface-container rounded-xl flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-high disabled:opacity-50"
+              class="w-11 h-11 bg-surface-container rounded-xl flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-high disabled:opacity-50 transition-all duration-200"
             >
               <span class="material-symbols-outlined">add</span>
             </button>
@@ -125,7 +125,7 @@ const COLORS = ['#4e6358', '#675e51', '#9f403d', '#6366f1', '#f97316', '#eab308'
           <button
             type="button"
             (click)="cancel.emit()"
-            class="flex-1 px-6 py-4 text-on-surface-variant hover:bg-surface-container-low rounded-xl font-bold text-sm"
+            class="flex-1 px-6 py-4 text-on-surface-variant hover:bg-surface-container-low rounded-xl font-bold text-sm transition-all duration-200"
           >
             Cancel
           </button>
@@ -133,7 +133,7 @@ const COLORS = ['#4e6358', '#675e51', '#9f403d', '#6366f1', '#f97316', '#eab308'
             type="button"
             (click)="onSave()"
             [disabled]="!title.trim()"
-            class="flex-1 px-6 py-4 bg-primary text-on-primary rounded-xl font-bold text-sm editorial-shadow hover:bg-primary-dim disabled:opacity-50 disabled:cursor-not-allowed"
+            class="flex-1 px-6 py-4 bg-primary text-on-primary rounded-xl font-bold text-sm editorial-shadow hover:bg-primary-dim disabled:opacity-50 disabled:cursor-not-allowed tonal-lift"
           >
             {{ goal ? 'Save Changes' : 'Create Goal' }}
           </button>

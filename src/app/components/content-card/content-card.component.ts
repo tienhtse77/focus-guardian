@@ -9,7 +9,7 @@ import { Content } from '../../services/storage.service';
     template: `
     <button
       (click)="clicked.emit()"
-      class="w-full p-6 bg-surface-container-lowest rounded-lg editorial-shadow hover:bg-surface-container-low group text-left"
+      class="w-full p-6 bg-surface-container-lowest rounded-lg editorial-shadow hover:bg-surface-container-low group text-left tonal-lift"
     >
       <!-- Source Icon & Domain -->
       <div class="flex items-center gap-3 mb-4">

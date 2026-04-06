@@ -40,7 +40,7 @@ import { Goal } from '../../services/storage.service';
         <!-- Add Goal Button -->
         <button
           (click)="addGoalClicked.emit()"
-          class="flex items-center gap-4 px-4 py-3 text-outline hover:text-primary hover:bg-surface-container rounded-full w-full mt-2"
+          class="flex items-center gap-4 px-4 py-3 text-outline hover:text-primary hover:bg-surface-container rounded-full w-full mt-2 transition-all duration-200"
           title="Add new goal"
         >
           <span class="material-symbols-outlined text-lg">add_circle</span>
@@ -50,7 +50,7 @@ import { Goal } from '../../services/storage.service';
 
       <!-- Bottom -->
       <div class="mt-auto pt-6" style="border-top: 1px solid rgba(173,179,178,0.15)">
-        <a href="#" class="flex items-center gap-4 px-4 py-2 text-on-surface-variant hover:bg-surface-container rounded-full text-sm">
+        <a href="#" class="flex items-center gap-4 px-4 py-2 text-on-surface-variant hover:bg-surface-container hover:text-primary rounded-full text-sm transition-all duration-200">
           <span class="material-symbols-outlined text-lg">settings</span>
           <span>Settings</span>
         </a>
@@ -73,7 +73,7 @@ export class SidebarComponent {
     const isDragging = this.draggedIndex() === index;
     const isDragOver = this.dragOverIndex() === index && this.draggedIndex() !== index;
 
-    let classes = 'flex items-center gap-4 px-4 py-3 w-full rounded-full cursor-grab active:cursor-grabbing ';
+    let classes = 'flex items-center gap-4 px-4 py-3 w-full rounded-full cursor-grab active:cursor-grabbing transition-all duration-200 ';
 
     if (isDragging) {
       classes += 'opacity-50 scale-90 ';

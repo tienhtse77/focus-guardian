@@ -35,11 +35,11 @@ import { ImportFeedsComponent } from '../import-feeds/import-feeds.component';
               </div>
             </div>
             <div class="flex items-center gap-4 mt-2">
-              <button (click)="editClicked.emit()" class="flex items-center gap-2 text-sm text-on-surface-variant hover:text-primary font-label">
+              <button (click)="editClicked.emit()" class="flex items-center gap-2 text-sm text-on-surface-variant hover:text-primary font-label px-3 py-1.5 rounded-lg hover:bg-surface-container-low transition-all duration-200">
                 <span class="material-symbols-outlined text-lg">edit</span>
                 Edit Goal
               </button>
-              <button (click)="confirmDelete()" class="flex items-center gap-2 text-sm text-on-surface-variant hover:text-error font-label">
+              <button (click)="confirmDelete()" class="flex items-center gap-2 text-sm text-on-surface-variant hover:text-error font-label px-3 py-1.5 rounded-lg hover:bg-error-container/20 transition-all duration-200">
                 <span class="material-symbols-outlined text-lg">delete</span>
                 Delete
               </button>
@@ -77,7 +77,7 @@ import { ImportFeedsComponent } from '../import-feeds/import-feeds.component';
                 <button
                   (click)="refreshContent()"
                   [disabled]="isLoading()"
-                  class="flex items-center gap-2 text-sm font-label text-primary font-semibold hover:text-primary-dim disabled:opacity-50"
+                  class="flex items-center gap-2 text-sm font-label text-primary font-semibold hover:text-primary-dim disabled:opacity-50 px-3 py-1.5 rounded-lg hover:bg-primary-container/30 transition-all duration-200"
                 >
                   <span class="material-symbols-outlined text-sm" [class.animate-spin]="isLoading()">refresh</span>
                   {{ isLoading() ? 'Fetching...' : 'Refresh' }}
@@ -155,7 +155,7 @@ import { ImportFeedsComponent } from '../import-feeds/import-feeds.component';
             <!-- Import Feeds Button -->
             <button
               (click)="showImportModal.set(true)"
-              class="w-full bg-primary text-on-primary py-4 rounded-xl font-bold text-sm tracking-wide editorial-shadow flex items-center justify-center gap-2 hover:bg-primary-dim"
+              class="w-full bg-primary text-on-primary py-4 rounded-xl font-bold text-sm tracking-wide editorial-shadow flex items-center justify-center gap-2 hover:bg-primary-dim tonal-lift"
             >
               <span class="material-symbols-outlined text-sm">upload</span>
               Import Feeds
