@@ -1,54 +1,77 @@
-/* Popup Styles */
+/* Popup Styles — Editorial Tranquility */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;800&display=swap');
+
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
+:root {
+    --primary: #4e6358;
+    --primary-dim: #43574c;
+    --primary-container: #d1e8da;
+    --on-primary: #e6fdee;
+    --on-surface: #2d3433;
+    --on-surface-variant: #5a6060;
+    --surface: #f9f9f8;
+    --surface-container-low: #f2f4f3;
+    --surface-container: #ebeeed;
+    --surface-container-lowest: #ffffff;
+    --outline: #757c7b;
+    --outline-variant: #adb3b2;
+    --tertiary-container: #faecdc;
+    --error-container: #fe8983;
+}
+
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #faf9f7;
-    min-width: 320px;
+    background: var(--surface);
+    min-width: 340px;
+    color: var(--on-surface);
 }
 
 .popup-container {
-    padding: 16px;
+    padding: 20px;
 }
 
 .popup-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #1f2937;
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--on-surface);
     margin-bottom: 16px;
     text-align: center;
+    letter-spacing: -0.01em;
 }
 
 .loading {
     text-align: center;
-    color: #6b7280;
+    color: var(--outline);
     padding: 24px 0;
+    font-size: 13px;
 }
 
 .hidden {
     display: none !important;
 }
 
-/* Page Preview */
+/* Page Preview — No-Line philosophy: tonal surface shift, no borders */
 .page-preview {
     display: flex;
     align-items: flex-start;
     gap: 12px;
-    padding: 12px;
-    background: white;
-    border-radius: 8px;
+    padding: 14px;
+    background: var(--surface-container-lowest);
+    border-radius: 1rem;
     margin-bottom: 16px;
-    border: 1px solid #e5e7eb;
+    box-shadow: 0 12px 32px rgba(45, 52, 51, 0.04);
 }
 
 .favicon {
     width: 20px;
     height: 20px;
-    border-radius: 4px;
+    border-radius: 6px;
     flex-shrink: 0;
     margin-top: 2px;
 }
@@ -59,20 +82,22 @@ body {
 }
 
 .page-title {
-    font-size: 14px;
-    font-weight: 500;
-    color: #1f2937;
-    margin-bottom: 4px;
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--on-surface);
+    margin-bottom: 3px;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+    line-height: 1.4;
 }
 
 .page-url {
-    font-size: 12px;
-    color: #6b7280;
+    font-size: 11px;
+    color: var(--outline);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -85,50 +110,68 @@ body {
 
 .form-group label {
     display: block;
-    font-size: 12px;
-    font-weight: 500;
-    color: #6b7280;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--on-surface-variant);
     margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
 }
 
+/* Goal Select — tonal surface, no border */
 .goal-select {
     width: 100%;
-    padding: 10px 12px;
-    font-size: 14px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    background: white;
-    color: #1f2937;
+    padding: 11px 14px;
+    font-size: 13px;
+    font-family: 'Inter', system-ui, sans-serif;
+    border: none;
+    border-radius: 0.75rem;
+    background: var(--surface-container-low);
+    color: var(--on-surface);
     cursor: pointer;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%235a6060'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 10px center;
     background-size: 16px;
+    transition: all 0.2s ease;
 }
 
 .goal-select:focus {
     outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 2px rgba(78, 99, 88, 0.2);
+    background-color: var(--surface-container);
 }
 
-/* Save Button */
+.goal-select:hover {
+    background-color: var(--surface-container);
+}
+
+/* Save Button — sage primary */
 .save-btn {
     width: 100%;
     padding: 12px;
-    font-size: 14px;
-    font-weight: 500;
-    color: white;
-    background: #6366f1;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--on-primary);
+    background: var(--primary);
     border: none;
-    border-radius: 8px;
+    border-radius: 0.75rem;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
+    box-shadow: 0 12px 32px rgba(45, 52, 51, 0.04);
+    letter-spacing: 0.02em;
 }
 
 .save-btn:hover:not(:disabled) {
-    background: #4f46e5;
+    background: var(--primary-dim);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(45, 52, 51, 0.08);
+}
+
+.save-btn:active:not(:disabled) {
+    transform: translateY(0);
 }
 
 .save-btn:disabled {
@@ -139,20 +182,21 @@ body {
 /* Status */
 .status {
     margin-top: 12px;
-    padding: 10px;
-    border-radius: 6px;
-    font-size: 13px;
+    padding: 10px 14px;
+    border-radius: 0.75rem;
+    font-size: 12px;
     text-align: center;
+    font-weight: 500;
 }
 
 .status.success {
-    background: #d1fae5;
-    color: #065f46;
+    background: var(--primary-container);
+    color: var(--primary-dim);
 }
 
 .status.error {
-    background: #fee2e2;
-    color: #991b1b;
+    background: #fde8e7;
+    color: #9f403d;
 }
 
 /* No Goals */
@@ -162,17 +206,19 @@ body {
 }
 
 .no-goals p {
-    color: #6b7280;
+    color: var(--outline);
     margin-bottom: 12px;
+    font-size: 13px;
 }
 
 .create-link {
-    color: #6366f1;
+    color: var(--primary);
     text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 600;
+    transition: color 0.2s ease;
 }
 
 .create-link:hover {
-    text-decoration: underline;
+    color: var(--primary-dim);
 }

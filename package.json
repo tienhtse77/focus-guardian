@@ -5,7 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build:css": "npx @tailwindcss/cli -i src/styles.css -o dist/browser/styles.css --content \"src/**/*.{html,ts}\"",
-    "build": "ng build && npm run build:css && npm run build:content-script",
+    "build": "npm run build:content-script && ng build && npm run build:css",
     "build:content-script": "npx esbuild src/content-script/facebook-interceptor.ts --bundle --outfile=dist/browser/content-script.js --format=iife && copy src\\content-script\\content-script.css dist\\browser\\content-script.css",
     "dev": "bash scripts/dev.sh",
     "test": "ng test"

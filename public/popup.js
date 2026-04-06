@@ -1,7 +1,6 @@
-// Popup Script - Save Page to Goal
+// Popup Script - Save Page to Goal (API-backed)
 
-const GOALS_KEY = 'focus_guardian_goals';
-const SAVED_PAGES_KEY = 'focus_guardian_saved_pages';
+const API_BASE = 'http://localhost:5251/api/v1';
 
 // DOM Elements
 const loadingEl = document.getElementById('loading');
@@ -30,11 +29,12 @@ async function init() {
         pageTitleEl.textContent = tab.title || 'Untitled Page';
         pageUrlEl.textContent = url.hostname + url.pathname;
 
-        // Load goals from sync storage
-        const result = await chrome.storage.sync.get([GOALS_KEY]);
-        const goals = result[GOALS_KEY] || [];
+        // Load goals from API
+        const response = await fetch(`${API_BASE}/goals`);
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
+        const goals = await response.json();
 
-        if (goals.length === 0) {
+        if (!goals || goals.length === 0) {
             loadingEl.classList.add('hidden');
             noGoalsEl.classList.remove('hidden');
             return;
@@ -53,7 +53,8 @@ async function init() {
 
     } catch (error) {
         console.error('Error initializing popup:', error);
-        showStatus('Failed to load page info', 'error');
+        loadingEl.classList.add('hidden');
+        showStatus('Could not connect to Focus Guardian API', 'error');
     }
 }
 
@@ -72,32 +73,25 @@ saveBtnEl.addEventListener('click', async () => {
     try {
         const url = new URL(currentTab.url);
 
-        // Get existing saved pages from sync storage
-        const result = await chrome.storage.sync.get([SAVED_PAGES_KEY]);
-        const pages = result[SAVED_PAGES_KEY] || [];
+        // Save page via API
+        const response = await fetch(`${API_BASE}/goals/${goalSelectEl.value}/saved-pages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: currentTab.title || 'Untitled',
+                url: currentTab.url,
+                favicon: currentTab.favIconUrl || `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=32`,
+            }),
+        });
 
-        // Check if already saved
-        const existing = pages.find(p => p.url === currentTab.url && p.goalId === goalSelectEl.value);
-        if (existing) {
+        if (response.status === 409) {
             showStatus('Page already saved to this goal', 'success');
             saveBtnEl.textContent = 'Save to Goal';
             saveBtnEl.disabled = false;
             return;
         }
 
-        // Create new saved page
-        const newPage = {
-            id: crypto.randomUUID(),
-            goalId: goalSelectEl.value,
-            title: currentTab.title || 'Untitled',
-            url: currentTab.url,
-            favicon: currentTab.favIconUrl || `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=32`,
-            savedAt: Date.now(),
-            status: 'unread'
-        };
-
-        pages.push(newPage);
-        await chrome.storage.sync.set({ [SAVED_PAGES_KEY]: pages });
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
 
         showStatus('Page saved successfully!', 'success');
         saveBtnEl.textContent = 'Saved ✓';
