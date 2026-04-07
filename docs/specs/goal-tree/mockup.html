@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Focus Guardian — Goal Tree v3 (Video Crossfade Player)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #4e6358; --primary-container: #d1e8da;
+      --on-surface: #2d3433; --on-surface-variant: #5a6060;
+      --surface: #f9f9f8; --surface-container-low: #f2f4f3;
+      --surface-container: #ebeeed; --surface-container-lowest: #ffffff;
+      --outline: #757c7b;
+    }
+    body { font-family: 'Manrope', system-ui, sans-serif; background: var(--surface); color: var(--on-surface); margin: 0; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .material-symbols-outlined.filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .editorial-shadow { box-shadow: 0 12px 32px rgba(45,52,51,0.04); }
+    input[type="range"] { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; background: var(--surface-container); outline: none; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--primary); cursor: pointer; box-shadow: 0 2px 8px rgba(45,52,51,0.2); }
+
+    /* Tree widget */
+    .tree-widget { position: relative; width: 300px; height: 400px; border-radius: 1.5rem; overflow: hidden; }
+    .tree-widget canvas,
+    .tree-widget video {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; border-radius: 1.5rem;
+      transition: opacity 1.5s ease;
+    }
+    .tree-bg {
+      position: absolute; inset: 0; border-radius: 1.5rem;
+      background: linear-gradient(180deg, #d0ddd4 0%, #e4e8e2 40%, #ede8e0 75%, #d8d0c4 100%);
+    }
+
+    /* Dark mode */
+    html.dark body { background: #0f1412; color: #e4e9e8; }
+    html.dark .tree-bg { background: linear-gradient(180deg, #1a2420 0%, #1e2220 40%, #1e1c18 75%, #16140e 100%); }
+    html.dark .bg-surface-container-lowest { background: #1a201e !important; }
+    html.dark .bg-surface-container-low { background: #1a201e !important; }
+    html.dark .bg-surface-container { background: #222826 !important; }
+    html.dark .bg-primary-container { background: #2a3d33 !important; }
+    html.dark .text-on-surface { color: #e4e9e8 !important; }
+    html.dark .text-on-surface-variant { color: #adb3b2 !important; }
+    html.dark .text-primary { color: #a8c4b5 !important; }
+    html.dark .text-outline { color: #757c7b !important; }
+    html.dark .editorial-shadow { box-shadow: 0 12px 32px rgba(0,0,0,0.2); }
+  </style>
+  <script>
+    tailwind.config = { darkMode: 'class', theme: { extend: { colors: {
+      primary: "#4e6358", "primary-dim": "#43574c", "primary-container": "#d1e8da",
+      "on-primary": "#e6fdee", "on-surface": "#2d3433", "on-surface-variant": "#5a6060",
+      surface: "#f9f9f8", "surface-container-low": "#f2f4f3", "surface-container": "#ebeeed",
+      "surface-container-lowest": "#ffffff", outline: "#757c7b", "tertiary-container": "#faecdc",
+    }, fontFamily: { headline: ["Manrope"], body: ["Manrope"], label: ["Inter"] },
+       borderRadius: { DEFAULT: "1rem", lg: "2rem" }
+    } } };
+  </script>
+</head>
+<body>
+  <div class="max-w-5xl mx-auto px-8 py-8">
+    <!-- Controls -->
+    <div class="mb-8 bg-surface-container-lowest rounded-2xl editorial-shadow p-6">
+      <div class="flex items-center justify-between mb-2">
+        <div>
+          <h2 class="text-lg font-bold text-on-surface">Goal Tree v3 — Video Crossfade Player</h2>
+          <p class="text-xs text-on-surface-variant mt-1">Canvas placeholders shown below. Replace with UE5-rendered WebM videos for production.</p>
+        </div>
+        <button onclick="document.documentElement.classList.toggle('dark')" class="text-on-surface-variant hover:text-primary p-2 rounded-full">
+          <span class="material-symbols-outlined">dark_mode</span>
+        </button>
+      </div>
+      <div class="flex items-center gap-6 mt-4">
+        <label class="text-sm font-semibold text-on-surface-variant shrink-0">Progress</label>
+        <input type="range" id="progress-slider" min="0" max="100" value="50" oninput="setProgress(+this.value)" />
+        <span id="progress-value" class="text-sm font-bold text-primary min-w-[3rem] text-right">50%</span>
+      </div>
+      <div class="flex gap-2 mt-4 flex-wrap">
+        <button onclick="setProgress(10)" class="px-3 py-1.5 text-xs font-semibold rounded-full bg-surface-container text-on-surface-variant hover:bg-primary-container hover:text-primary transition-all">Seedling</button>
+        <button onclick="setProgress(30)" class="px-3 py-1.5 text-xs font-semibold rounded-full bg-surface-container text-on-surface-variant hover:bg-primary-container hover:text-primary transition-all">Sapling</button>
+        <button onclick="setProgress(50)" class="px-3 py-1.5 text-xs font-semibold rounded-full bg-surface-container text-on-surface-variant hover:bg-primary-container hover:text-primary transition-all">Young</button>
+        <button onclick="setProgress(75)" class="px-3 py-1.5 text-xs font-semibold rounded-full bg-surface-container text-on-surface-variant hover:bg-primary-container hover:text-primary transition-all">Mature</button>
+        <button onclick="setProgress(95)" class="px-3 py-1.5 text-xs font-semibold rounded-full bg-surface-container text-on-surface-variant hover:bg-primary-container hover:text-primary transition-all">Ancient</button>
+      </div>
+    </div>
+
+    <!-- Layout -->
+    <div class="grid grid-cols-12 gap-8">
+      <!-- Left: fake goal content -->
+      <div class="col-span-8 space-y-6">
+        <div class="flex items-center gap-3">
+          <span class="text-3xl">🌍</span>
+          <div>
+            <h1 class="text-2xl font-extrabold text-on-surface tracking-tight">Learn English</h1>
+            <p class="text-sm text-on-surface-variant font-light">Curated content for your goal</p>
+          </div>
+        </div>
+        <div class="bg-surface-container-low rounded-2xl p-6 space-y-3">
+          <div class="flex items-center gap-3"><div class="w-5 h-5 rounded bg-primary-container"></div><span class="text-sm">Watch 2 episodes of British TV show</span></div>
+          <div class="flex items-center gap-3"><div class="w-5 h-5 rounded bg-primary-container"></div><span class="text-sm">Practice pronunciation for 15 mins</span></div>
+          <div class="flex items-center gap-3"><div class="w-5 h-5 rounded bg-surface-container"></div><span class="text-sm text-on-surface-variant line-through">Review vocabulary flashcards</span></div>
+          <div class="flex items-center gap-3"><div class="w-5 h-5 rounded bg-surface-container"></div><span class="text-sm text-on-surface-variant line-through">Set up RSS feeds</span></div>
+        </div>
+        <!-- Info box -->
+        <div class="bg-primary-container/30 rounded-2xl p-5">
+          <p class="text-sm text-on-surface-variant leading-relaxed">
+            <span class="font-bold text-primary">How it works:</span>
+            Each growth stage is a short looping video rendered in UE5 with SpeedTree.
+            The player crossfades between stages with a smooth 1.5s transition.
+            Currently showing canvas-rendered placeholders — swap with real <code class="text-xs bg-surface-container px-1.5 py-0.5 rounded">.webm</code> videos for production.
+          </p>
+        </div>
+      </div>
+
+      <!-- Right: Tree Widget -->
+      <div class="col-span-4">
+        <div class="sticky top-8 space-y-4">
+          <div class="tree-widget editorial-shadow" id="tree-widget">
+            <div class="tree-bg"></div>
+            <!-- 5 canvas layers — one per stage, crossfade via opacity -->
+            <canvas id="stage-1" width="600" height="800" style="opacity:0;"></canvas>
+            <canvas id="stage-2" width="600" height="800" style="opacity:0;"></canvas>
+            <canvas id="stage-3" width="600" height="800" style="opacity:1;"></canvas>
+            <canvas id="stage-4" width="600" height="800" style="opacity:0;"></canvas>
+            <canvas id="stage-5" width="600" height="800" style="opacity:0;"></canvas>
+          </div>
+          <div class="text-center">
+            <p id="stage-label" class="text-xs font-bold uppercase tracking-[0.2em] text-primary">Young Tree</p>
+            <p class="text-[11px] text-outline mt-1">Growing with your progress</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    //  CANVAS PLACEHOLDER RENDERER
+    //  In production, replace these canvases with <video> elements
+    //  pointing to UE5-rendered .webm files.
+    // ============================================================
+
+    const W = 600, H = 800;
+    const stageCanvases = [1,2,3,4,5].map(i => document.getElementById(`stage-${i}`));
+    const stageCtxs = stageCanvases.map(c => c.getContext('2d'));
+
+    // Seeded random
+    function mulberry32(a) {
+      return function() {
+        a |= 0; a = a + 0x6D2B79F5 | 0;
+        let t = Math.imul(a ^ a >>> 15, 1 | a);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+    }
+
+    // Color helpers
+    function lerpColor(a, b, t) {
+      const ar = parseInt(a.slice(1,3),16), ag = parseInt(a.slice(3,5),16), ab = parseInt(a.slice(5,7),16);
+      const br = parseInt(b.slice(1,3),16), bg = parseInt(b.slice(3,5),16), bb = parseInt(b.slice(5,7),16);
+      const r = Math.round(ar + (br-ar)*t), g = Math.round(ag + (bg-ag)*t), bl = Math.round(ab + (bb-ab)*t);
+      return `rgb(${r},${g},${bl})`;
+    }
+
+    // Draw a single tree frame on a canvas context
+    function drawTree(ctx, stage, time) {
+      const rand = mulberry32(42 + stage * 7);
+      ctx.clearRect(0, 0, W, H);
+
+      // Parameters per stage — all heights relative to canvas to stay visible
+      // Max usable height is H - 140 (80px ground margin + 60px top margin)
+      const maxTreeH = H - 160;
+      const params = [
+        { trunkH: maxTreeH * 0.15, trunkW: 8,  depth: 2, leafR: 0,   leafCount: 0,   leafSize: 0,  rootW: 12 },   // seedling
+        { trunkH: maxTreeH * 0.28, trunkW: 14, depth: 3, leafR: 45,  leafCount: 40,  leafSize: 12, rootW: 22 },   // sapling
+        { trunkH: maxTreeH * 0.38, trunkW: 20, depth: 3, leafR: 75,  leafCount: 120, leafSize: 16, rootW: 32 },   // young
+        { trunkH: maxTreeH * 0.42, trunkW: 26, depth: 4, leafR: 100, leafCount: 220, leafSize: 18, rootW: 40 },   // mature
+        { trunkH: maxTreeH * 0.45, trunkW: 32, depth: 4, leafR: 130, leafCount: 350, leafSize: 20, rootW: 50 },   // ancient
+      ][stage];
+
+      const baseX = W / 2;
+      const baseY = H - 90;
+
+      // Ground shadow
+      const shadowGrad = ctx.createRadialGradient(baseX, baseY + 10, 0, baseX, baseY + 10, params.rootW * 3);
+      shadowGrad.addColorStop(0, 'rgba(45,52,51,0.15)');
+      shadowGrad.addColorStop(1, 'rgba(45,52,51,0)');
+      ctx.fillStyle = shadowGrad;
+      ctx.fillRect(0, baseY - 20, W, 100);
+
+      // Ground line — subtle moss
+      ctx.fillStyle = 'rgba(78,99,88,0.12)';
+      ctx.beginPath();
+      ctx.ellipse(baseX, baseY + 5, params.rootW * 2.5, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // ---- TRUNK ----
+      const branches = [];
+
+      function drawBranch(x, y, angle, length, width, depth) {
+        if (depth <= 0 || width < 1.5) return;
+
+        const sway = Math.sin(time * 0.8 + depth * 0.5 + x * 0.01) * (depth * 0.4);
+        const endAngle = angle + sway * (Math.PI / 180);
+        const ex = x + Math.sin(endAngle) * length;
+        const ey = y - Math.cos(endAngle) * length;
+
+        // Draw tapered branch
+        const topW = width * 0.6;
+        const perpX = Math.cos(endAngle);
+        const perpY = Math.sin(endAngle);
+
+        ctx.beginPath();
+        ctx.moveTo(x - perpX * width/2, y - perpY * width/2);
+        ctx.lineTo(ex - perpX * topW/2, ey - perpY * topW/2);
+        ctx.lineTo(ex + perpX * topW/2, ey + perpY * topW/2);
+        ctx.lineTo(x + perpX * width/2, y + perpY * width/2);
+        ctx.closePath();
+
+        // Bark color with AO — deeper branches darker
+        const ao = 1 - depth * 0.08;
+        const r = Math.floor(88 * ao), g = Math.floor(68 * ao), b = Math.floor(48 * ao);
+        ctx.fillStyle = `rgb(${r},${g},${b})`;
+        ctx.fill();
+
+        // Bark texture lines
+        ctx.strokeStyle = `rgba(30,20,10,${0.15 * ao})`;
+        ctx.lineWidth = 0.8;
+        const steps = Math.floor(length / 6);
+        for (let s = 0; s < steps; s++) {
+          const t2 = s / steps;
+          const lx = x + (ex - x) * t2;
+          const ly = y + (ey - y) * t2;
+          const lw = width * (1 - t2 * 0.4) * 0.4;
+          ctx.beginPath();
+          ctx.moveTo(lx - perpX * lw + rand() * 2, ly - perpY * lw);
+          ctx.lineTo(lx + perpX * lw + rand() * 2, ly + perpY * lw);
+          ctx.stroke();
+        }
+
+        branches.push({ x: ex, y: ey, depth, angle: endAngle });
+
+        // Child branches — wider spread to grow outward not just upward
+        const nChildren = depth === params.depth ? 3 : 2 + (rand() > 0.5 ? 1 : 0);
+        for (let i = 0; i < nChildren; i++) {
+          const spread = 0.5 + rand() * 0.6;
+          const side = (i / (nChildren - 1 || 1)) * 2 - 1; // -1 to 1
+          const childAngle = endAngle + side * spread + (rand() - 0.5) * 0.3;
+          const childLen = length * (0.45 + rand() * 0.2);
+          const childW = topW * (0.6 + rand() * 0.2);
+          drawBranch(ex, ey, childAngle, childLen, childW, depth - 1);
+        }
+      }
+
+      // Root flare
+      if (stage > 0) {
+        ctx.beginPath();
+        ctx.moveTo(baseX - params.rootW, baseY + 5);
+        ctx.quadraticCurveTo(baseX - params.trunkW * 0.6, baseY - params.trunkH * 0.05, baseX - params.trunkW / 2, baseY - params.trunkH * 0.1);
+        ctx.lineTo(baseX + params.trunkW / 2, baseY - params.trunkH * 0.1);
+        ctx.quadraticCurveTo(baseX + params.trunkW * 0.6, baseY - params.trunkH * 0.05, baseX + params.rootW, baseY + 5);
+        ctx.closePath();
+        ctx.fillStyle = `rgb(78,58,38)`;
+        ctx.fill();
+      }
+
+      // Draw main trunk + branches recursively
+      drawBranch(baseX, baseY, 0, params.trunkH, params.trunkW, params.depth);
+
+      // ---- LEAF CANOPY ----
+      if (params.leafCount > 0) {
+        // Collect branch tips for leaf placement
+        const tips = branches.filter(b => b.depth <= 2);
+
+        // Sort back-to-front for depth
+        tips.sort((a, b) => a.y - b.y);
+
+        const leafColors = ['#3d5248','#4e6358','#5a7a5e','#6b8f6e','#8ca295','#4a6e52','#5e7e62','#7a9c7e'];
+
+        // Draw leaf clusters at each tip — constrained around tips
+        for (const tip of tips) {
+          const count = Math.floor(params.leafCount / tips.length * (0.6 + rand() * 0.8));
+          for (let i = 0; i < count; i++) {
+            const lx = tip.x + (rand() - 0.5) * params.leafR * 1.2;
+            const ly = tip.y + (rand() - 0.5) * params.leafR * 0.9 - params.leafR * 0.2;
+            const ls = params.leafSize * (0.5 + rand() * 1.0);
+
+            // Wind sway
+            const windX = Math.sin(time * 1.2 + lx * 0.02 + ly * 0.01) * 2;
+            const windY = Math.cos(time * 0.9 + ly * 0.015) * 0.8;
+
+            const color = leafColors[Math.floor(rand() * leafColors.length)];
+
+            // Leaf as ellipse
+            ctx.save();
+            ctx.translate(lx + windX, ly + windY);
+            ctx.rotate(rand() * Math.PI * 2 + Math.sin(time + lx) * 0.05);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, ls * 0.5, ls * 0.8, 0, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.globalAlpha = 0.5 + rand() * 0.4;
+            ctx.fill();
+
+            // SSS highlight — lighter edge on sun side
+            ctx.beginPath();
+            ctx.ellipse(-ls * 0.1, -ls * 0.1, ls * 0.3, ls * 0.5, 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(209,232,218,0.15)';
+            ctx.globalAlpha = 0.6;
+            ctx.fill();
+
+            ctx.restore();
+          }
+        }
+
+        // Ambient occlusion — darken center of canopy
+        const canopyCenterY = baseY - params.trunkH * 0.7;
+        const aoGrad = ctx.createRadialGradient(baseX, canopyCenterY, params.leafR * 0.2, baseX, canopyCenterY, params.leafR * 1.2);
+        aoGrad.addColorStop(0, 'rgba(30,40,35,0.1)');
+        aoGrad.addColorStop(1, 'rgba(30,40,35,0)');
+        ctx.fillStyle = aoGrad;
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      // Seedling: small sprout leaves
+      if (stage === 0) {
+        const sproutTop = baseY - params.trunkH;
+        // Two tiny leaves
+        for (let side = -1; side <= 1; side += 2) {
+          ctx.save();
+          ctx.translate(baseX + side * 3, sproutTop + 5);
+          ctx.rotate(side * 0.4 + Math.sin(time * 1.5) * 0.05);
+          ctx.beginPath();
+          ctx.ellipse(side * 8, -6, 6, 12, side * 0.3, 0, Math.PI * 2);
+          ctx.fillStyle = '#5a7a5e';
+          ctx.globalAlpha = 0.85;
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      // Ancient glow
+      if (stage === 4) {
+        const glowY = baseY - params.trunkH * 0.55;
+        const glowGrad = ctx.createRadialGradient(baseX, glowY, 20, baseX, glowY, params.leafR * 1.8);
+        glowGrad.addColorStop(0, 'rgba(209,232,218,0.08)');
+        glowGrad.addColorStop(0.5, 'rgba(209,232,218,0.04)');
+        glowGrad.addColorStop(1, 'rgba(209,232,218,0)');
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = glowGrad;
+        ctx.fillRect(0, 0, W, H);
+      }
+    }
+
+    // ============================================================
+    //  ANIMATION LOOP — renders all 5 stages continuously
+    //  (In production, videos play themselves — no render loop needed)
+    // ============================================================
+    let animTime = 0;
+    function renderLoop() {
+      requestAnimationFrame(renderLoop);
+      animTime += 0.016;
+      for (let i = 0; i < 5; i++) {
+        // Only render visible stages (optimization)
+        const opacity = parseFloat(stageCanvases[i].style.opacity);
+        if (opacity > 0.01) {
+          drawTree(stageCtxs[i], i, animTime);
+        }
+      }
+    }
+    renderLoop();
+
+    // ============================================================
+    //  CROSSFADE CONTROLLER
+    //  This is the actual logic that will work with <video> too.
+    // ============================================================
+    const stages = ['Seedling', 'Sapling', 'Young Tree', 'Mature Tree', 'Ancient Tree'];
+    function getStage(p) { return p <= 20 ? 0 : p <= 40 ? 1 : p <= 60 ? 2 : p <= 80 ? 3 : 4; }
+
+    let currentStage = 2;
+
+    function setProgress(v) {
+      v = Math.max(0, Math.min(100, v));
+      document.getElementById('progress-slider').value = v;
+      document.getElementById('progress-value').textContent = v + '%';
+
+      const newStage = getStage(v);
+      document.getElementById('stage-label').textContent = stages[newStage];
+
+      if (newStage !== currentStage) {
+        // Crossfade: hide current, show new
+        stageCanvases[currentStage].style.opacity = '0';
+        stageCanvases[newStage].style.opacity = '1';
+        currentStage = newStage;
+      }
+    }
+
+    window.setProgress = setProgress;
+  </script>
+</body>
+</html>
