@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Focus Guardian — Command Palette Mockup</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .material-symbols-outlined.filled {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .editorial-shadow { box-shadow: 0 12px 32px rgba(45, 52, 51, 0.04); }
+    .palette-shadow { box-shadow: 0 24px 64px rgba(45, 52, 51, 0.12), 0 8px 24px rgba(45, 52, 51, 0.06); }
+
+    /* State tabs for demo */
+    .state-tab { cursor: pointer; padding: 6px 16px; border-radius: 9999px; font-size: 12px; font-weight: 600; transition: all 0.2s; user-select: none; }
+    .state-tab.active { background: #4E6358; color: #e6fdee; }
+    .state-tab:not(.active) { background: #ebeeed; color: #5a6060; }
+    .state-panel { display: none; }
+    .state-panel.active { display: flex; }
+
+    * { transition-property: background-color, border-color, color, opacity, box-shadow, transform; transition-duration: 0.15s; transition-timing-function: ease; }
+
+    /* Backdrop blur */
+    .glass-backdrop { background: rgba(45, 52, 51, 0.08); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+
+    /* Keyboard shortcut badge */
+    .kbd {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 22px; height: 22px; padding: 0 5px;
+      font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 500;
+      color: #757c7b; background: #f2f4f3; border-radius: 5px;
+      line-height: 1;
+    }
+
+    /* Dark mode */
+    html.dark { color-scheme: dark; }
+    html.dark body { background: #0f1412; color: #e4e9e8; }
+    html.dark .glass-backdrop { background: rgba(0, 0, 0, 0.3); }
+    html.dark .bg-surface-container-lowest { background: #1a201e !important; }
+    html.dark .bg-surface-container-low { background: #1a201e !important; }
+    html.dark .bg-surface-container { background: #222826 !important; }
+    html.dark .bg-surface-container-high { background: #2a302e !important; }
+    html.dark .bg-primary-container { background: #2a3d33 !important; }
+    html.dark .text-on-surface { color: #e4e9e8 !important; }
+    html.dark .text-on-surface-variant { color: #adb3b2 !important; }
+    html.dark .text-outline { color: #757c7b !important; }
+    html.dark .text-primary { color: #a8c4b5 !important; }
+    html.dark .palette-shadow { box-shadow: 0 24px 64px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.2); }
+    html.dark .kbd { background: #2a302e; color: #adb3b2; }
+    html.dark .editorial-shadow { box-shadow: 0 12px 32px rgba(0,0,0,0.2); }
+  </style>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#4e6358", "primary-dim": "#43574c", "primary-container": "#d1e8da",
+            "on-primary": "#e6fdee", "on-surface": "#2d3433", "on-surface-variant": "#5a6060",
+            surface: "#f9f9f8", "surface-container-low": "#f2f4f3", "surface-container": "#ebeeed",
+            "surface-container-lowest": "#ffffff", "surface-container-high": "#e4e9e8",
+            outline: "#757c7b", "outline-variant": "#adb3b2",
+            tertiary: "#675e51", "tertiary-container": "#faecdc",
+            error: "#9f403d", "error-container": "#fe8983",
+            background: "#f9f9f8",
+          },
+          fontFamily: {
+            headline: ["Manrope", "system-ui", "sans-serif"],
+            body: ["Manrope", "system-ui", "sans-serif"],
+            label: ["Inter", "system-ui", "sans-serif"],
+          },
+          borderRadius: { DEFAULT: "1rem", lg: "2rem", xl: "3rem" },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen">
+
+  <!-- ===== Demo State Switcher ===== -->
+  <div class="fixed top-0 left-0 right-0 z-[100] bg-surface-container-lowest/90 backdrop-blur-sm px-6 py-3 flex items-center gap-3 editorial-shadow">
+    <span class="text-xs font-label font-bold text-on-surface-variant uppercase tracking-widest mr-2">Command Palette States</span>
+    <div class="state-tab active" data-state="default" onclick="switchState('default')">Default</div>
+    <div class="state-tab" data-state="task-mode" onclick="switchState('task-mode')">Task Mode</div>
+    <div class="state-tab" data-state="task-added" onclick="switchState('task-added')">Task Added</div>
+    <div class="state-tab" data-state="jump-goal" onclick="switchState('jump-goal')">Jump to Goal</div>
+    <div class="state-tab" data-state="no-goal" onclick="switchState('no-goal')">No Goal Selected</div>
+    <div class="flex-1"></div>
+    <button onclick="document.documentElement.classList.toggle('dark')" class="text-on-surface-variant hover:text-primary p-2 rounded-full hover:bg-surface-container">
+      <span class="material-symbols-outlined text-xl">dark_mode</span>
+    </button>
+  </div>
+
+  <!-- ===== Background: Blurred Goal View (context) ===== -->
+  <div class="pt-20 ml-[280px] px-12 opacity-40 blur-[1px] pointer-events-none select-none">
+    <div class="max-w-3xl pt-8">
+      <div class="flex items-center gap-3 mb-1">
+        <span class="text-3xl">🌍</span>
+        <h1 class="text-3xl font-headline font-extrabold text-on-surface tracking-tight">Learn English</h1>
+      </div>
+      <p class="text-sm text-on-surface-variant font-light mb-4 ml-12">Curated content for your goal</p>
+      <div class="flex items-center gap-4 ml-12 mb-10">
+        <span class="flex items-center gap-2 text-sm text-on-surface-variant font-label"><span class="material-symbols-outlined text-lg">edit</span> Edit Goal</span>
+        <span class="flex items-center gap-2 text-sm text-on-surface-variant font-label"><span class="material-symbols-outlined text-lg">delete</span> Delete</span>
+      </div>
+      <!-- Fake task list behind -->
+      <div class="space-y-3 ml-12">
+        <div class="flex items-center gap-3 py-2"><div class="w-5 h-5 rounded bg-surface-container"></div><span class="text-sm text-on-surface">Watch 2 episodes of British TV show</span></div>
+        <div class="flex items-center gap-3 py-2"><div class="w-5 h-5 rounded bg-surface-container"></div><span class="text-sm text-on-surface">Practice pronunciation for 15 mins</span></div>
+        <div class="flex items-center gap-3 py-2"><div class="w-5 h-5 rounded bg-primary-container"></div><span class="text-sm text-on-surface-variant line-through">Review vocabulary flashcards</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STATE: Default — Action List ===== -->
+  <div id="state-default" class="state-panel active fixed inset-0 z-50 items-start justify-center pt-[15vh] glass-backdrop">
+    <div class="w-full max-w-lg mx-4 bg-surface-container-lowest rounded-lg palette-shadow overflow-hidden">
+      <!-- Input -->
+      <div class="flex items-center gap-3 px-5 py-4">
+        <span class="material-symbols-outlined text-outline text-xl">search</span>
+        <input type="text" placeholder="Type a command..." class="flex-1 bg-transparent text-on-surface text-base font-body placeholder:text-outline-variant focus:outline-none" readonly />
+        <span class="kbd">esc</span>
+      </div>
+      <!-- Divider via tonal shift -->
+      <div class="bg-surface-container-low px-5 py-2">
+        <span class="text-[10px] font-label font-bold uppercase tracking-[0.2em] text-outline">Actions</span>
+      </div>
+      <!-- Action List -->
+      <div class="py-2">
+        <div class="flex items-center gap-3 px-5 py-3 bg-primary-container/40 cursor-pointer">
+          <span class="material-symbols-outlined text-primary text-xl">add_task</span>
+          <span class="text-sm font-body text-on-surface flex-1">Add task</span>
+          <span class="text-xs font-label text-on-surface-variant">to current goal</span>
+          <span class="kbd">T</span>
+        </div>
+        <div class="flex items-center gap-3 px-5 py-3 hover:bg-surface-container-low cursor-pointer">
+          <span class="material-symbols-outlined text-on-surface-variant text-xl">swap_horiz</span>
+          <span class="text-sm font-body text-on-surface flex-1">Jump to goal</span>
+          <span class="text-xs font-label text-on-surface-variant">switch goals</span>
+          <span class="kbd">G</span>
+        </div>
+        <div class="flex items-center gap-3 px-5 py-3 hover:bg-surface-container-low cursor-pointer">
+          <span class="material-symbols-outlined text-on-surface-variant text-xl">search</span>
+          <span class="text-sm font-body text-on-surface flex-1">Search content</span>
+          <span class="text-xs font-label text-on-surface-variant">articles & pages</span>
+          <span class="kbd">S</span>
+        </div>
+        <div class="flex items-center gap-3 px-5 py-3 hover:bg-surface-container-low cursor-pointer">
+          <span class="material-symbols-outlined text-on-surface-variant text-xl">upload</span>
+          <span class="text-sm font-body text-on-surface flex-1">Import feeds</span>
+          <span class="text-xs font-label text-on-surface-variant">OPML or URLs</span>
+          <span class="kbd">I</span>
+        </div>
+      </div>
+      <!-- Footer hint -->
+      <div class="bg-surface-container-low px-5 py-2.5 flex items-center gap-4">
+        <span class="text-[11px] font-label text-outline flex items-center gap-1.5"><span class="kbd text-[10px]">&uarr;</span><span class="kbd text-[10px]">&darr;</span> navigate</span>
+        <span class="text-[11px] font-label text-outline flex items-center gap-1.5"><span class="kbd text-[10px]">&crarr;</span> select</span>
+        <span class="text-[11px] font-label text-outline flex items-center gap-1.5"><span class="kbd text-[10px]">esc</span> close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STATE: Task Mode — Adding a task ===== -->
+  <div id="state-task-mode" class="state-panel fixed inset-0 z-50 items-start justify-center pt-[15vh] glass-backdrop">
+    <div class="w-full max-w-lg mx-4 bg-surface-container-lowest rounded-lg palette-shadow overflow-hidden">
+      <!-- Input with task prefix -->
+      <div class="flex items-center gap-3 px-5 py-4">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary-container rounded-full text-primary text-xs font-label font-semibold shrink-0">
+          <span class="material-symbols-outlined text-sm">add_task</span>
+          Task
+        </span>
+        <input type="text" value="Read one article from RSS feeds" class="flex-1 bg-transparent text-on-surface text-base font-body placeholder:text-outline-variant focus:outline-none" readonly />
+        <span class="kbd">esc</span>
+      </div>
+      <!-- Context bar -->
+      <div class="bg-surface-container-low px-5 py-2.5 flex items-center justify-between">
+        <span class="text-[11px] font-label text-outline flex items-center gap-2">
+          <span class="text-base">🌍</span>
+          Adding to <span class="font-semibold text-on-surface-variant">Learn English</span>
+        </span>
+        <span class="text-[11px] font-label text-outline flex items-center gap-1.5">
+          <span class="kbd text-[10px]">&crarr;</span> add task
+          <span class="mx-1 text-outline-variant">&middot;</span>
+          <span class="kbd text-[10px]">esc</span> back
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STATE: Task Added — Success feedback ===== -->
+  <div id="state-task-added" class="state-panel fixed inset-0 z-50 items-start justify-center pt-[15vh] glass-backdrop">
+    <div class="w-full max-w-lg mx-4 bg-surface-container-lowest rounded-lg palette-shadow overflow-hidden">
+      <!-- Input cleared, ready for next -->
+      <div class="flex items-center gap-3 px-5 py-4">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary-container rounded-full text-primary text-xs font-label font-semibold shrink-0">
+          <span class="material-symbols-outlined text-sm">add_task</span>
+          Task
+        </span>
+        <input type="text" placeholder="Add another task..." class="flex-1 bg-transparent text-on-surface text-base font-body placeholder:text-outline-variant focus:outline-none" readonly />
+        <span class="kbd">esc</span>
+      </div>
+      <!-- Success toast -->
+      <div class="mx-5 mb-3 px-4 py-2.5 bg-primary-container/50 rounded-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary text-lg filled">check_circle</span>
+        <span class="text-sm text-primary font-label font-semibold">"Read one article from RSS feeds" added</span>
+      </div>
+      <!-- Context bar -->
+      <div class="bg-surface-container-low px-5 py-2.5 flex items-center justify-between">
+        <span class="text-[11px] font-label text-outline flex items-center gap-2">
+          <span class="text-base">🌍</span>
+          Adding to <span class="font-semibold text-on-surface-variant">Learn English</span>
+          <span class="mx-1 text-outline-variant">&middot;</span>
+          <span class="text-primary font-semibold">3 / 5 done</span>
+        </span>
+        <span class="text-[11px] font-label text-outline flex items-center gap-1.5">
+          <span class="kbd text-[10px]">&crarr;</span> add task
+          <span class="mx-1 text-outline-variant">&middot;</span>
+          <span class="kbd text-[10px]">esc</span> back
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STATE: Jump to Goal ===== -->
+  <div id="state-jump-goal" class="state-panel fixed inset-0 z-50 items-start justify-center pt-[15vh] glass-backdrop">
+    <div class="w-full max-w-lg mx-4 bg-surface-container-lowest rounded-lg palette-shadow overflow-hidden">
+      <!-- Input -->
+      <div class="flex items-center gap-3 px-5 py-4">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface-container rounded-full text-on-surface-variant text-xs font-label font-semibold shrink-0">
+          <span class="material-symbols-outlined text-sm">swap_horiz</span>
+          Goal
+        </span>
+        <input type="text" placeholder="Search goals..." class="flex-1 bg-transparent text-on-surface text-base font-body placeholder:text-outline-variant focus:outline-none" readonly />
+        <span class="kbd">esc</span>
+      </div>
+      <!-- Goal list -->
+      <div class="py-2">
+        <div class="flex items-center gap-3 px-5 py-3 bg-primary-container/40 cursor-pointer">
+          <span class="text-xl">🌍</span>
+          <span class="text-sm font-body text-on-surface flex-1">Learn English</span>
+          <span class="text-[10px] font-label font-bold text-primary bg-primary-container px-2 py-0.5 rounded uppercase tracking-widest">Current</span>
+        </div>
+        <div class="flex items-center gap-3 px-5 py-3 hover:bg-surface-container-low cursor-pointer">
+          <span class="text-xl">🇩🇪</span>
+          <span class="text-sm font-body text-on-surface flex-1">German</span>
+        </div>
+        <div class="flex items-center gap-3 px-5 py-3 hover:bg-surface-container-low cursor-pointer">
+          <span class="text-xl">💻</span>
+          <span class="text-sm font-body text-on-surface flex-1">Web Development</span>
+        </div>
+        <div class="flex items-center gap-3 px-5 py-3 hover:bg-surface-container-low cursor-pointer">
+          <span class="text-xl">🧘</span>
+          <span class="text-sm font-body text-on-surface flex-1">Mindfulness</span>
+        </div>
+      </div>
+      <!-- Footer -->
+      <div class="bg-surface-container-low px-5 py-2.5 flex items-center gap-4">
+        <span class="text-[11px] font-label text-outline flex items-center gap-1.5"><span class="kbd text-[10px]">&uarr;</span><span class="kbd text-[10px]">&darr;</span> navigate</span>
+        <span class="text-[11px] font-label text-outline flex items-center gap-1.5"><span class="kbd text-[10px]">&crarr;</span> switch</span>
+        <span class="text-[11px] font-label text-outline flex items-center gap-1.5"><span class="kbd text-[10px]">esc</span> back</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STATE: No Goal Selected ===== -->
+  <div id="state-no-goal" class="state-panel fixed inset-0 z-50 items-start justify-center pt-[15vh] glass-backdrop">
+    <div class="w-full max-w-lg mx-4 bg-surface-container-lowest rounded-lg palette-shadow overflow-hidden">
+      <!-- Input -->
+      <div class="flex items-center gap-3 px-5 py-4">
+        <span class="material-symbols-outlined text-outline text-xl">search</span>
+        <input type="text" value="task" class="flex-1 bg-transparent text-on-surface text-base font-body placeholder:text-outline-variant focus:outline-none" readonly />
+        <span class="kbd">esc</span>
+      </div>
+      <!-- Hint -->
+      <div class="px-5 py-6 text-center">
+        <span class="material-symbols-outlined text-outline text-3xl mb-2 block">info</span>
+        <p class="text-sm text-on-surface-variant font-label">Select a goal first to add tasks</p>
+        <p class="text-xs text-outline mt-1 font-label">Use <span class="kbd text-[10px] mx-0.5">G</span> to jump to a goal</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- State switcher script -->
+  <script>
+    function switchState(stateId) {
+      document.querySelectorAll('.state-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.state-panel').forEach(p => p.classList.remove('active'));
+      document.querySelector(`[data-state="${stateId}"]`).classList.add('active');
+      document.getElementById(`state-${stateId}`).classList.add('active');
+    }
+  </script>
+</body>
+</html>

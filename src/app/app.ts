@@ -1,8 +1,9 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject, HostListener, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { GoalViewComponent } from './components/goal-view/goal-view.component';
 import { GoalFormComponent } from './components/goal-form/goal-form.component';
+import { CommandPaletteComponent } from './components/command-palette/command-palette.component';
 import { Goal } from './services/storage.service';
 import { ApiService } from './services/api.service';
 import { themeService } from './services/theme.service';
@@ -10,7 +11,7 @@ import { themeService } from './services/theme.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, GoalViewComponent, GoalFormComponent],
+  imports: [CommonModule, SidebarComponent, GoalViewComponent, GoalFormComponent, CommandPaletteComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -22,6 +23,10 @@ export class App {
   showGoalForm = signal(false);
   editingGoal = signal<Goal | null>(null);
   isDarkMode = signal(false);
+  showCommandPalette = signal(false);
+  todoStats = signal<{ completed: number; total: number } | null>(null);
+
+  @ViewChild(GoalViewComponent) goalViewRef?: GoalViewComponent;
 
   selectedGoal = computed(() => {
     const id = this.selectedGoalId();
@@ -117,6 +122,35 @@ export class App {
     if (this.selectedGoalId() === goalId) {
       this.selectedGoalId.set(this.goals()[0]?.id || null);
     }
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent) {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+      event.preventDefault();
+      this.showCommandPalette.set(true);
+    }
+  }
+
+  closeCommandPalette() {
+    this.showCommandPalette.set(false);
+  }
+
+  async onTaskAdded(event: { goalId: string; title: string }) {
+    await this.api.createTodoItem(event.goalId, event.title);
+    // Refresh the goal view's todo list
+    if (this.goalViewRef) {
+      await this.goalViewRef.loadTodoItems();
+      const items = this.goalViewRef.todoItems();
+      this.todoStats.set({
+        completed: items.filter(t => t.isCompleted).length,
+        total: items.length,
+      });
+    }
+  }
+
+  onGoalJumped(goalId: string) {
+    this.selectGoal(goalId);
   }
 
   async reorderGoals(reorderedGoals: Goal[]) {

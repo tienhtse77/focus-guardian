@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, signal, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Goal, Content, SavedPage, PageStatus } from '../../services/storage.service';
+import { Goal, Content, SavedPage, PageStatus, TodoItem } from '../../services/storage.service';
 import { ContentAggregatorService } from '../../services/content-aggregator.service';
 import { ApiService } from '../../services/api.service';
 import { ContentCardComponent } from '../content-card/content-card.component';
@@ -45,6 +45,40 @@ import { ImportFeedsComponent } from '../import-feeds/import-feeds.component';
               </button>
             </div>
           </section>
+
+          <!-- Tasks Section -->
+          @if (todoItems().length > 0) {
+            <section class="space-y-4">
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary text-lg">checklist</span>
+                <h3 class="text-lg font-headline font-bold text-on-surface tracking-tight">Tasks</h3>
+                <span class="text-xs font-label font-bold text-primary bg-primary-container px-2 py-1 rounded">{{ completedTodoCount }} / {{ todoItems().length }}</span>
+              </div>
+              <div class="space-y-1">
+                @for (todo of todoItems(); track todo.id) {
+                  <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-container-low group transition-all duration-200">
+                    <button (click)="toggleTodo(todo)" class="shrink-0 text-on-surface-variant hover:text-primary transition-all duration-200">
+                      <span class="material-symbols-outlined text-xl" [class.filled]="todo.isCompleted" [class.text-primary]="todo.isCompleted">
+                        {{ todo.isCompleted ? 'check_box' : 'check_box_outline_blank' }}
+                      </span>
+                    </button>
+                    <span class="flex-1 text-sm" [class]="todo.isCompleted ? 'text-on-surface-variant line-through' : 'text-on-surface'">
+                      {{ todo.title }}
+                    </span>
+                    <button (click)="deleteTodo(todo)" class="shrink-0 opacity-0 group-hover:opacity-100 p-1 rounded-full text-on-surface-variant hover:text-error hover:bg-error-container/20 transition-all duration-200">
+                      <span class="material-symbols-outlined text-lg">close</span>
+                    </button>
+                  </div>
+                }
+              </div>
+              @if (completedTodoCount === todoItems().length && todoItems().length > 0) {
+                <div class="flex items-center gap-2 px-3 py-2 text-primary">
+                  <span class="material-symbols-outlined text-sm filled">celebration</span>
+                  <span class="text-xs font-label font-semibold">All tasks done!</span>
+                </div>
+              }
+            </section>
+          }
 
           <!-- Saved Pages Section -->
           @if (savedPages().length > 0) {
@@ -205,6 +239,7 @@ export class GoalViewComponent implements OnInit, OnChanges {
 
   content = signal<Content[]>([]);
   savedPages = signal<SavedPage[]>([]);
+  todoItems = signal<TodoItem[]>([]);
   isLoading = signal(false);
   showImportModal = signal(false);
   importMessage = signal<string>('');
@@ -212,12 +247,14 @@ export class GoalViewComponent implements OnInit, OnChanges {
   async ngOnInit() {
     await this.loadContent();
     await this.loadSavedPages();
+    await this.loadTodoItems();
   }
 
   async ngOnChanges(changes: SimpleChanges) {
     if (changes['goal'] && !changes['goal'].firstChange) {
       await this.loadContent();
       await this.loadSavedPages();
+      await this.loadTodoItems();
     }
   }
 
@@ -234,6 +271,29 @@ export class GoalViewComponent implements OnInit, OnChanges {
       return b.savedAt - a.savedAt;
     });
     this.savedPages.set(pages);
+  }
+
+  async loadTodoItems() {
+    const items = await this.api.getTodoItems(this.goal.id);
+    items.sort((a, b) => {
+      if (a.isCompleted !== b.isCompleted) return a.isCompleted ? 1 : -1;
+      return a.createdAt - b.createdAt;
+    });
+    this.todoItems.set(items);
+  }
+
+  async toggleTodo(item: TodoItem) {
+    await this.api.updateTodoItem(item.id, { isCompleted: !item.isCompleted });
+    await this.loadTodoItems();
+  }
+
+  async deleteTodo(item: TodoItem) {
+    await this.api.deleteTodoItem(item.id);
+    await this.loadTodoItems();
+  }
+
+  get completedTodoCount(): number {
+    return this.todoItems().filter(t => t.isCompleted).length;
   }
 
   async refreshContent() {

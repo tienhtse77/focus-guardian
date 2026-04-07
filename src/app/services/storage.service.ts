@@ -29,6 +29,15 @@ export interface Content {
     fetchedAt: number;
 }
 
+export interface TodoItem {
+    id: string;
+    goalId: string;
+    title: string;
+    isCompleted: boolean;
+    createdAt: number; // epoch ms
+    completedAt?: number; // epoch ms
+}
+
 export type PageStatus = 'unread' | 'viewed' | 'favorite' | 'watch-later';
 
 export interface SavedPage {

@@ -16,7 +16,13 @@
         <span class="material-symbols-outlined text-outline text-lg">wb_sunny</span>
         <span class="text-sm font-light text-on-surface-variant">{{ greeting() }}</span>
       </div>
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3">
+        <button (click)="showCommandPalette.set(true)"
+          class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all duration-200"
+          title="Command palette (Ctrl+K)">
+          <span class="material-symbols-outlined text-lg">terminal</span>
+          <span class="text-xs font-label text-outline" style="display:inline-flex;align-items:center;gap:2px;padding:1px 5px;background:#f2f4f3;border-radius:4px;font-size:11px;font-weight:500;">Ctrl+K</span>
+        </button>
         <button (click)="toggleTheme()" class="text-on-surface-variant hover:text-primary p-2 rounded-full hover:bg-surface-container transition-all duration-200"
           [title]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'">
           <span class="material-symbols-outlined">{{ isDarkMode() ? 'light_mode' : 'dark_mode' }}</span>
@@ -62,4 +68,16 @@
   @if (showGoalForm()) {
     <app-goal-form [goal]="editingGoal()" (save)="saveGoal($event)" (cancel)="closeGoalForm()" />
   }
+
+  <!-- Command Palette -->
+  <app-command-palette
+    [isOpen]="showCommandPalette()"
+    [goals]="goals()"
+    [selectedGoalId]="selectedGoalId()"
+    [todoStats]="todoStats()"
+    (closed)="closeCommandPalette()"
+    (taskAdded)="onTaskAdded($event)"
+    (goalJumped)="onGoalJumped($event)"
+    (importRequested)="showCommandPalette.set(false)"
+  />
 </main>

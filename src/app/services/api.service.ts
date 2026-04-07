@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../environment';
-import { Goal, Content, SavedPage, ContentSource, PageStatus } from './storage.service';
+import { Goal, Content, SavedPage, ContentSource, PageStatus, TodoItem } from './storage.service';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -110,7 +110,47 @@ export class ApiService {
     await firstValueFrom(this.http.delete<void>(`${this.baseUrl}/saved-pages/${pageId}`));
   }
 
+  // --- TodoItems ---
+
+  async getTodoItems(goalId: string): Promise<TodoItem[]> {
+    try {
+      const dtos = await firstValueFrom(this.http.get<any[]>(`${this.baseUrl}/goals/${goalId}/todos`));
+      return (dtos ?? []).map(dto => this.mapTodoItemFromApi(dto));
+    } catch (error) {
+      console.error('Failed to fetch todo items:', error);
+      return [];
+    }
+  }
+
+  async createTodoItem(goalId: string, title: string): Promise<TodoItem> {
+    const body = { title };
+    const dto = await firstValueFrom(this.http.post<any>(`${this.baseUrl}/goals/${goalId}/todos`, body));
+    return this.mapTodoItemFromApi(dto);
+  }
+
+  async updateTodoItem(todoId: string, updates: { title?: string; isCompleted?: boolean }): Promise<TodoItem> {
+    const dto = await firstValueFrom(
+      this.http.patch<any>(`${this.baseUrl}/todos/${todoId}`, updates)
+    );
+    return this.mapTodoItemFromApi(dto);
+  }
+
+  async deleteTodoItem(todoId: string): Promise<void> {
+    await firstValueFrom(this.http.delete<void>(`${this.baseUrl}/todos/${todoId}`));
+  }
+
   // --- Private mapping helpers ---
+
+  private mapTodoItemFromApi(dto: any): TodoItem {
+    return {
+      id: dto.id,
+      goalId: dto.goalId,
+      title: dto.title,
+      isCompleted: dto.isCompleted ?? false,
+      createdAt: dto.createdAt ? new Date(dto.createdAt).getTime() : Date.now(),
+      completedAt: dto.completedAt ? new Date(dto.completedAt).getTime() : undefined,
+    };
+  }
 
   private mapGoalFromApi(dto: any): Goal {
     return {

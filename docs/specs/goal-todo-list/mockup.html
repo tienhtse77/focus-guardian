@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Focus Guardian — Todo List Mockup</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .material-symbols-outlined.filled {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .editorial-shadow { box-shadow: 0 12px 32px rgba(45, 52, 51, 0.04); }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+
+    /* State tabs for demo */
+    .state-tab { cursor: pointer; padding: 6px 16px; border-radius: 9999px; font-size: 12px; font-weight: 600; transition: all 0.2s; }
+    .state-tab.active { background: #4E6358; color: #e6fdee; }
+    .state-tab:not(.active) { background: #ebeeed; color: #5a6060; }
+    .state-panel { display: none; }
+    .state-panel.active { display: block; }
+
+    * { transition-property: background-color, border-color, color, opacity, box-shadow, transform; transition-duration: 0.2s; transition-timing-function: ease; }
+
+    /* Dark mode */
+    html.dark { color-scheme: dark; }
+    html.dark body { background: #0f1412; color: #e4e9e8; }
+    html.dark .bg-surface-container-low { background: #1a201e !important; }
+    html.dark .bg-background, html.dark .bg-surface { background: #0f1412 !important; }
+    html.dark .bg-surface-container-lowest { background: #1a201e !important; }
+    html.dark .bg-surface-container { background: #222826 !important; }
+    html.dark .bg-surface-container-high { background: #2a302e !important; }
+    html.dark .bg-tertiary-container { background: #2e2820 !important; }
+    html.dark .bg-primary-container { background: #2a3d33 !important; }
+    html.dark .text-on-surface { color: #e4e9e8 !important; }
+    html.dark .text-on-surface-variant { color: #adb3b2 !important; }
+    html.dark .text-outline { color: #757c7b !important; }
+    html.dark .text-primary { color: #a8c4b5 !important; }
+    html.dark .bg-primary { background: #3a4d43 !important; }
+    html.dark .editorial-shadow { box-shadow: 0 12px 32px rgba(0,0,0,0.2); }
+
+    /* Strikethrough animation */
+    .todo-done { text-decoration: line-through; text-decoration-color: #adb3b2; }
+  </style>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-container-low": "#f2f4f3",
+            "surface-container-high": "#e4e9e8",
+            "surface-container-highest": "#dde4e3",
+            "surface-container-lowest": "#ffffff",
+            "surface-container": "#ebeeed",
+            "primary": "#4e6358",
+            "primary-dim": "#43574c",
+            "primary-container": "#d1e8da",
+            "on-primary": "#e6fdee",
+            "on-primary-container": "#42564b",
+            "on-surface": "#2d3433",
+            "on-surface-variant": "#5a6060",
+            "outline": "#757c7b",
+            "outline-variant": "#adb3b2",
+            "tertiary": "#675e51",
+            "tertiary-container": "#faecdc",
+            "on-tertiary-container": "#60574b",
+            "on-tertiary-fixed-variant": "#6b6155",
+            "error": "#9f403d",
+            "error-container": "#fe8983",
+            "background": "#f9f9f8",
+          },
+          fontFamily: {
+            headline: ["Manrope", "system-ui", "sans-serif"],
+            body: ["Manrope", "system-ui", "sans-serif"],
+            label: ["Inter", "system-ui", "sans-serif"],
+          },
+          borderRadius: { "lg": "2rem", "DEFAULT": "1rem", "xl": "3rem" },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="bg-background font-body text-on-surface min-h-screen">
+
+  <!-- ===================== DEMO CONTROLS ===================== -->
+  <div class="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest/90 backdrop-blur-sm py-3 px-6 flex items-center gap-4" style="border-bottom: 1px solid rgba(173,179,178,0.15)">
+    <span class="text-xs font-label font-bold text-on-surface-variant uppercase tracking-widest">Todo List States</span>
+    <div class="flex gap-2">
+      <button class="state-tab active" onclick="showState('populated')">Populated</button>
+      <button class="state-tab" onclick="showState('empty')">Empty</button>
+      <button class="state-tab" onclick="showState('typing')">Typing</button>
+      <button class="state-tab" onclick="showState('all-done')">All Done</button>
+    </div>
+    <div class="ml-auto">
+      <button onclick="document.documentElement.classList.toggle('dark')" class="text-on-surface-variant hover:text-primary p-2 rounded-full hover:bg-surface-container">
+        <span class="material-symbols-outlined text-lg">dark_mode</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================== MAIN LAYOUT ===================== -->
+  <div class="pt-20 pb-20 px-8 max-w-4xl mx-auto">
+
+    <!-- Goal Header (context) -->
+    <section class="mb-10">
+      <div class="flex items-center gap-3 mb-2">
+        <span class="text-3xl">🌍</span>
+        <div>
+          <h1 class="text-3xl font-headline font-extrabold text-on-surface tracking-tight">Learn English</h1>
+          <p class="text-sm text-on-surface-variant font-light mt-1">Curated content for your goal</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 mt-2">
+        <button class="flex items-center gap-2 text-sm text-on-surface-variant hover:text-primary font-label px-3 py-1.5 rounded-lg hover:bg-surface-container-low">
+          <span class="material-symbols-outlined text-lg">edit</span>Edit Goal
+        </button>
+        <button class="flex items-center gap-2 text-sm text-on-surface-variant hover:text-error font-label px-3 py-1.5 rounded-lg hover:bg-surface-container-low">
+          <span class="material-symbols-outlined text-lg">delete</span>Delete
+        </button>
+      </div>
+    </section>
+
+    <!-- ===================== STATE: POPULATED ===================== -->
+    <div id="state-populated" class="state-panel active">
+      <section class="space-y-1">
+        <!-- Section Header -->
+        <div class="flex items-center gap-3 mb-4">
+          <span class="material-symbols-outlined text-primary text-lg">checklist</span>
+          <h3 class="text-lg font-headline font-bold text-on-surface tracking-tight">Tasks</h3>
+          <span class="text-xs font-label font-bold text-primary bg-primary-container px-2 py-1 rounded">2 / 5</span>
+        </div>
+
+        <!-- Add Task Input -->
+        <div class="flex items-center gap-3 px-4 py-3 bg-surface-container-low rounded-[1rem] mb-2">
+          <span class="material-symbols-outlined text-outline text-xl">add_circle</span>
+          <input type="text" placeholder="Add a task..." class="flex-1 bg-transparent text-sm text-on-surface placeholder:text-outline focus:outline-none font-body" />
+        </div>
+
+        <!-- Todo Items -->
+        <div class="space-y-0.5">
+          <!-- Active item -->
+          <div class="group flex items-center gap-3 px-4 py-3 rounded-[1rem] hover:bg-surface-container-low cursor-pointer">
+            <button class="shrink-0 text-outline hover:text-primary">
+              <span class="material-symbols-outlined text-xl">check_box_outline_blank</span>
+            </button>
+            <span class="flex-1 text-sm text-on-surface">Watch 2 episodes of British TV show</span>
+            <button class="shrink-0 opacity-0 group-hover:opacity-100 text-outline hover:text-error p-1 rounded-full hover:bg-surface-container">
+              <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
+
+          <!-- Active item -->
+          <div class="group flex items-center gap-3 px-4 py-3 rounded-[1rem] hover:bg-surface-container-low cursor-pointer">
+            <button class="shrink-0 text-outline hover:text-primary">
+              <span class="material-symbols-outlined text-xl">check_box_outline_blank</span>
+            </button>
+            <span class="flex-1 text-sm text-on-surface">Practice pronunciation for 15 mins</span>
+            <button class="shrink-0 opacity-0 group-hover:opacity-100 text-outline hover:text-error p-1 rounded-full hover:bg-surface-container">
+              <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
+
+          <!-- Active item -->
+          <div class="group flex items-center gap-3 px-4 py-3 rounded-[1rem] hover:bg-surface-container-low cursor-pointer">
+            <button class="shrink-0 text-outline hover:text-primary">
+              <span class="material-symbols-outlined text-xl">check_box_outline_blank</span>
+            </button>
+            <span class="flex-1 text-sm text-on-surface">Read one article from RSS feeds</span>
+            <button class="shrink-0 opacity-0 group-hover:opacity-100 text-outline hover:text-error p-1 rounded-full hover:bg-surface-container">
+              <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
+
+          <!-- Completed item -->
+          <div class="group flex items-center gap-3 px-4 py-3 rounded-[1rem] hover:bg-surface-container-low cursor-pointer">
+            <button class="shrink-0 text-primary">
+              <span class="material-symbols-outlined text-xl filled">check_box</span>
+            </button>
+            <span class="flex-1 text-sm text-on-surface-variant/60 todo-done">Review vocabulary flashcards</span>
+            <button class="shrink-0 opacity-0 group-hover:opacity-100 text-outline hover:text-error p-1 rounded-full hover:bg-surface-container">
+              <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
+
+          <!-- Completed item -->
+          <div class="group flex items-center gap-3 px-4 py-3 rounded-[1rem] hover:bg-surface-container-low cursor-pointer">
+            <button class="shrink-0 text-primary">
+              <span class="material-symbols-outlined text-xl filled">check_box</span>
+            </button>
+            <span class="flex-1 text-sm text-on-surface-variant/60 todo-done">Set up RSS feeds for English blogs</span>
+            <button class="shrink-0 opacity-0 group-hover:opacity-100 text-outline hover:text-error p-1 rounded-full hover:bg-surface-container">
+              <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===================== STATE: EMPTY ===================== -->
+    <div id="state-empty" class="state-panel">
+      <section class="space-y-1">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="material-symbols-outlined text-primary text-lg">checklist</span>
+          <h3 class="text-lg font-headline font-bold text-on-surface tracking-tight">Tasks</h3>
+        </div>
+
+        <!-- Add Task Input -->
+        <div class="flex items-center gap-3 px-4 py-3 bg-surface-container-low rounded-[1rem] mb-4">
+          <span class="material-symbols-outlined text-outline text-xl">add_circle</span>
+          <input type="text" placeholder="Add a task..." class="flex-1 bg-transparent text-sm text-on-surface placeholder:text-outline focus:outline-none font-body" />
+        </div>
+
+        <!-- Empty state -->
+        <div class="text-center py-8">
+          <span class="material-symbols-outlined text-outline text-3xl mb-3 block">task_alt</span>
+          <p class="text-sm text-on-surface-variant">No tasks yet. Type above to add one.</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===================== STATE: TYPING ===================== -->
+    <div id="state-typing" class="state-panel">
+      <section class="space-y-1">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="material-symbols-outlined text-primary text-lg">checklist</span>
+          <h3 class="text-lg font-headline font-bold text-on-surface tracking-tight">Tasks</h3>
+          <span class="text-xs font-label font-bold text-primary bg-primary-container px-2 py-1 rounded">0 / 2</span>
+        </div>
+
+        <!-- Add Task Input — active state -->
+        <div class="flex items-center gap-3 px-4 py-3 bg-surface-container-low rounded-[1rem] mb-2" style="box-shadow: 0 0 0 2px rgba(78, 99, 88, 0.2);">
+          <span class="material-symbols-outlined text-primary text-xl">add_circle</span>
+          <div class="flex-1 flex items-center">
+            <span class="text-sm text-on-surface font-body">Listen to English podcast ep. 42</span>
+            <span class="w-0.5 h-5 bg-primary animate-pulse ml-0.5"></span>
+          </div>
+          <span class="text-xs text-outline font-label">Enter ↵</span>
+        </div>
+
+        <div class="space-y-0.5">
+          <div class="group flex items-center gap-3 px-4 py-3 rounded-[1rem] hover:bg-surface-container-low cursor-pointer">
+            <button class="shrink-0 text-outline hover:text-primary">
+              <span class="material-symbols-outlined text-xl">check_box_outline_blank</span>
+            </button>
+            <span class="flex-1 text-sm text-on-surface">Watch 2 episodes of British TV show</span>
+            <button class="shrink-0 opacity-0 group-hover:opacity-100 text-outline hover:text-error p-1 rounded-full hover:bg-surface-container">
+              <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
+
+          <div class="group flex items-center gap-3 px-4 py-3 rounded-[1rem] hover:bg-surface-container-low cursor-pointer">
+            <button class="shrink-0 text-outline hover:text-primary">
+              <span class="material-symbols-outlined text-xl">check_box_outline_blank</span>
+            </button>
+            <span class="flex-1 text-sm text-on-surface">Practice pronunciation for 15 mins</span>
+            <button class="shrink-0 opacity-0 group-hover:opacity-100 text-outline hover:text-error p-1 rounded-full hover:bg-surface-container">
+              <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===================== STATE: ALL DONE ===================== -->
+    <div id="state-all-done" class="state-panel">
+      <section class="space-y-1">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="material-symbols-outlined text-primary text-lg">checklist</span>
+          <h3 class="text-lg font-headline font-bold text-on-surface tracking-tight">Tasks</h3>
+          <span class="text-xs font-label font-bold text-primary bg-primary-container px-2 py-1 rounded">3 / 3</span>
+        </div>
+
+        <!-- Add Task Input -->
+        <div class="flex items-center gap-3 px-4 py-3 bg-surface-container-low rounded-[1rem] mb-2">
+          <span class="material-symbols-outlined text-outline text-xl">add_circle</span>
+          <input type="text" placeholder="Add a task..." class="flex-1 bg-transparent text-sm text-on-surface placeholder:text-outline focus:outline-none font-body" />
+        </div>
+
+        <!-- Celebration micro-banner -->
+        <div class="flex items-center gap-3 px-4 py-3 bg-primary-container rounded-[1rem] mb-2">
+          <span class="material-symbols-outlined text-primary text-lg filled">emoji_events</span>
+          <p class="text-sm text-on-primary-container font-semibold">All tasks complete — well done!</p>
+        </div>
+
+        <div class="space-y-0.5">
+          <div class="group flex items-center gap-3 px-4 py-3 rounded-[1rem] hover:bg-surface-container-low cursor-pointer">
+            <button class="shrink-0 text-primary">
+              <span class="material-symbols-outlined text-xl filled">check_box</span>
+            </button>
+            <span class="flex-1 text-sm text-on-surface-variant/60 todo-done">Watch 2 episodes of British TV show</span>
+            <button class="shrink-0 opacity-0 group-hover:opacity-100 text-outline hover:text-error p-1 rounded-full hover:bg-surface-container">
+              <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
+
+          <div class="group flex items-center gap-3 px-4 py-3 rounded-[1rem] hover:bg-surface-container-low cursor-pointer">
+            <button class="shrink-0 text-primary">
+              <span class="material-symbols-outlined text-xl filled">check_box</span>
+            </button>
+            <span class="flex-1 text-sm text-on-surface-variant/60 todo-done">Practice pronunciation for 15 mins</span>
+            <button class="shrink-0 opacity-0 group-hover:opacity-100 text-outline hover:text-error p-1 rounded-full hover:bg-surface-container">
+              <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
+
+          <div class="group flex items-center gap-3 px-4 py-3 rounded-[1rem] hover:bg-surface-container-low cursor-pointer">
+            <button class="shrink-0 text-primary">
+              <span class="material-symbols-outlined text-xl filled">check_box</span>
+            </button>
+            <span class="flex-1 text-sm text-on-surface-variant/60 todo-done">Read one article from RSS feeds</span>
+            <button class="shrink-0 opacity-0 group-hover:opacity-100 text-outline hover:text-error p-1 rounded-full hover:bg-surface-container">
+              <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  </div>
+
+  <!-- ===================== DEMO SCRIPT ===================== -->
+  <script>
+    function showState(name) {
+      document.querySelectorAll('.state-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.state-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('state-' + name).classList.add('active');
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>
