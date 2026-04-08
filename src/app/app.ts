@@ -4,6 +4,7 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { GoalViewComponent } from './components/goal-view/goal-view.component';
 import { GoalFormComponent } from './components/goal-form/goal-form.component';
 import { CommandPaletteComponent } from './components/command-palette/command-palette.component';
+import { HomeComponent } from './components/home/home.component';
 import { Goal } from './services/storage.service';
 import { ApiService } from './services/api.service';
 import { themeService } from './services/theme.service';
@@ -11,7 +12,7 @@ import { themeService } from './services/theme.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, GoalViewComponent, GoalFormComponent, CommandPaletteComponent],
+  imports: [CommonModule, SidebarComponent, GoalViewComponent, GoalFormComponent, CommandPaletteComponent, HomeComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -20,6 +21,7 @@ export class App {
 
   goals = signal<Goal[]>([]);
   selectedGoalId = signal<string | null>(null);
+  isHome = signal(true);
   showGoalForm = signal(false);
   editingGoal = signal<Goal | null>(null);
   isDarkMode = signal(false);
@@ -27,6 +29,7 @@ export class App {
   todoStats = signal<{ completed: number; total: number } | null>(null);
 
   @ViewChild(GoalViewComponent) goalViewRef?: GoalViewComponent;
+  @ViewChild(HomeComponent) homeRef?: HomeComponent;
 
   selectedGoal = computed(() => {
     const id = this.selectedGoalId();
@@ -80,13 +83,16 @@ export class App {
     }
 
     this.goals.set(goals);
-    if (goals.length > 0 && !this.selectedGoalId()) {
-      this.selectedGoalId.set(goals[0].id);
-    }
   }
 
   selectGoal(goalId: string) {
     this.selectedGoalId.set(goalId);
+    this.isHome.set(false);
+  }
+
+  goHome() {
+    this.isHome.set(true);
+    this.selectedGoalId.set(null);
   }
 
   openAddGoal() {
@@ -138,7 +144,7 @@ export class App {
 
   async onTaskAdded(event: { goalId: string; title: string }) {
     await this.api.createTodoItem(event.goalId, event.title);
-    // Refresh the goal view's todo list
+    // Refresh the active view's todo list
     if (this.goalViewRef) {
       await this.goalViewRef.loadTodoItems();
       const items = this.goalViewRef.todoItems();
@@ -146,6 +152,9 @@ export class App {
         completed: items.filter(t => t.isCompleted).length,
         total: items.length,
       });
+    }
+    if (this.homeRef) {
+      await this.homeRef.loadAllTodos();
     }
   }
 

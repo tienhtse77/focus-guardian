@@ -9,15 +9,24 @@ import { Goal } from '../../services/storage.service';
   styles: [`:host { display: contents; }`],
   template: `
     <aside class="fixed left-0 top-0 h-full w-[280px] bg-surface-container-low flex flex-col py-8 px-6 font-body tracking-tight text-sm z-50">
-      <!-- Brand -->
-      <div class="mb-10 px-4">
-        <h1 class="text-xl font-bold text-on-surface">Focus Guardian</h1>
+      <!-- Brand — clickable to go home -->
+      <div class="mb-10 px-4 cursor-pointer group" (click)="homeClicked.emit()">
+        <h1 class="text-xl font-bold text-on-surface group-hover:text-primary transition-all duration-200">Focus Guardian</h1>
         <p class="text-[10px] text-outline-variant mt-1 uppercase tracking-[0.2em] font-label font-semibold">Curated Sanctuary</p>
       </div>
 
       <!-- Goal Navigation -->
       <nav class="flex-1 space-y-1 overflow-y-auto no-scrollbar">
         <p class="text-[10px] font-label uppercase tracking-[0.2em] text-outline-variant px-4 mb-3 font-semibold">Your Goals</p>
+
+        <!-- Home -->
+        <button
+          (click)="homeClicked.emit()"
+          [class]="'flex items-center gap-4 px-4 py-3 w-full rounded-full transition-all duration-200 ' + (isHome ? 'text-primary font-bold bg-surface editorial-shadow' : 'text-on-surface-variant hover:bg-surface-container')"
+        >
+          <span class="material-symbols-outlined text-lg">home</span>
+          <span>Home</span>
+        </button>
 
         @for (goal of goals; track goal.id; let i = $index) {
           <button
@@ -61,7 +70,9 @@ import { Goal } from '../../services/storage.service';
 export class SidebarComponent {
   @Input() goals: Goal[] = [];
   @Input() selectedGoalId: string | null = null;
+  @Input() isHome = false;
   @Output() goalSelected = new EventEmitter<string>();
+  @Output() homeClicked = new EventEmitter<void>();
   @Output() addGoalClicked = new EventEmitter<void>();
   @Output() goalsReordered = new EventEmitter<Goal[]>();
 
@@ -69,7 +80,7 @@ export class SidebarComponent {
   dragOverIndex = signal<number | null>(null);
 
   getGoalClass(goalId: string, index: number): string {
-    const isSelected = this.selectedGoalId === goalId;
+    const isSelected = !this.isHome && this.selectedGoalId === goalId;
     const isDragging = this.draggedIndex() === index;
     const isDragOver = this.dragOverIndex() === index && this.draggedIndex() !== index;
 

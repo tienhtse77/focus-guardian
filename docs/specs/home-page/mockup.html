@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Focus Guardian — Home Page Mockup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .material-symbols-outlined.filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .editorial-shadow { box-shadow: 0 12px 32px rgba(45, 52, 51, 0.04); }
+    .state-tab { cursor: pointer; padding: 6px 14px; border-radius: 9999px; font-size: 11px; font-weight: 600; transition: all 0.2s; user-select: none; white-space: nowrap; }
+    .state-tab.active { background: #4E6358; color: #e6fdee; }
+    .state-tab:not(.active) { background: #ebeeed; color: #5a6060; }
+    .state-panel { display: none; }
+    .state-panel.active { display: block; }
+    * { transition-property: background-color, color, opacity, box-shadow, transform; transition-duration: 0.15s; }
+
+    /* Progress ring */
+    .progress-ring { transform: rotate(-90deg); }
+    .progress-ring circle { transition: stroke-dashoffset 0.6s ease; }
+
+    /* Stepping stone connector */
+    .stone-connector { width: 2px; height: 24px; background: linear-gradient(180deg, #d1e8da 0%, transparent 100%); margin-left: 19px; }
+
+    html.dark { color-scheme: dark; }
+    html.dark body { background: #0f1412; color: #e4e9e8; }
+    html.dark .bg-background { background: #0f1412 !important; }
+    html.dark .bg-surface-container-lowest { background: #1a201e !important; }
+    html.dark .bg-surface-container-low { background: #1a201e !important; }
+    html.dark .bg-surface-container { background: #222826 !important; }
+    html.dark .bg-surface-container-high { background: #2a302e !important; }
+    html.dark .bg-tertiary-container { background: #2e2820 !important; }
+    html.dark .bg-primary-container { background: #2a3d33 !important; }
+    html.dark .text-on-surface { color: #e4e9e8 !important; }
+    html.dark .text-on-surface-variant { color: #adb3b2 !important; }
+    html.dark .text-outline { color: #757c7b !important; }
+    html.dark .text-outline-variant { color: #5a6060 !important; }
+    html.dark .text-primary { color: #a8c4b5 !important; }
+    html.dark .text-on-tertiary-container { color: #d4c8b8 !important; }
+    html.dark .text-on-tertiary-fixed-variant { color: #d4c8b8 !important; }
+    html.dark .editorial-shadow { box-shadow: 0 12px 32px rgba(0,0,0,0.2); }
+    html.dark .state-tab:not(.active) { background: #222826; color: #adb3b2; }
+    html.dark .stone-connector { background: linear-gradient(180deg, #2a3d33 0%, transparent 100%); }
+  </style>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: { extend: {
+        colors: {
+          primary: "#4e6358", "primary-dim": "#43574c", "primary-container": "#d1e8da",
+          "on-primary": "#e6fdee", "on-surface": "#2d3433", "on-surface-variant": "#5a6060",
+          surface: "#f9f9f8", "surface-container-low": "#f2f4f3", "surface-container": "#ebeeed",
+          "surface-container-lowest": "#ffffff", "surface-container-high": "#e4e9e8",
+          outline: "#757c7b", "outline-variant": "#adb3b2", background: "#f9f9f8",
+          tertiary: "#675e51", "tertiary-container": "#faecdc",
+          "on-tertiary-container": "#60574b", "on-tertiary-fixed-variant": "#6b6155",
+          error: "#9f403d", "error-container": "#fe8983",
+        },
+        fontFamily: { headline: ["Manrope"], body: ["Manrope"], label: ["Inter"] },
+        borderRadius: { DEFAULT: "1rem", lg: "2rem" },
+      }},
+    };
+  </script>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen">
+
+  <!-- Demo switcher -->
+  <div class="fixed top-0 left-0 right-0 z-[100] bg-surface-container-lowest/90 backdrop-blur-sm px-6 py-3 flex items-center gap-2 editorial-shadow">
+    <span class="text-xs font-label font-bold text-on-surface-variant uppercase tracking-widest mr-2">Home</span>
+    <div class="state-tab active" data-state="cards" onclick="switchState('cards')">1. Focus Cards</div>
+    <div class="state-tab" data-state="momentum" onclick="switchState('momentum')">2. Momentum</div>
+    <div class="state-tab" data-state="garden" onclick="switchState('garden')">3. Garden</div>
+    <div class="state-tab" data-state="editorial" onclick="switchState('editorial')">4. Morning Brief</div>
+    <div class="flex-1"></div>
+    <button onclick="document.documentElement.classList.toggle('dark')" class="text-on-surface-variant hover:text-primary p-2 rounded-full hover:bg-surface-container">
+      <span class="material-symbols-outlined text-xl">dark_mode</span>
+    </button>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="fixed left-0 top-0 h-full w-[280px] bg-surface-container-low flex flex-col py-8 px-6 text-sm z-50">
+    <div class="mb-10 px-4 cursor-pointer group">
+      <h1 class="text-xl font-bold text-on-surface group-hover:text-primary transition-all">Focus Guardian</h1>
+      <p class="text-[10px] text-outline-variant mt-1 uppercase tracking-[0.2em] font-semibold">Curated Sanctuary</p>
+    </div>
+    <nav class="flex-1 space-y-1 overflow-y-auto">
+      <p class="text-[10px] uppercase tracking-[0.2em] text-outline-variant px-4 mb-3 font-semibold">Your Goals</p>
+      <button class="flex items-center gap-4 px-4 py-3 w-full rounded-full text-primary font-bold bg-surface editorial-shadow">
+        <span class="material-symbols-outlined text-lg">home</span>
+        <span>Home</span>
+      </button>
+      <button class="flex items-center gap-4 px-4 py-3 w-full rounded-full text-on-surface-variant hover:bg-surface-container">
+        <span class="text-lg">🌍</span><span>Learn English</span>
+      </button>
+      <button class="flex items-center gap-4 px-4 py-3 w-full rounded-full text-on-surface-variant hover:bg-surface-container">
+        <span class="text-lg">🇩🇪</span><span>German</span>
+      </button>
+      <button class="flex items-center gap-4 px-4 py-3 w-full rounded-full text-on-surface-variant hover:bg-surface-container">
+        <span class="text-lg">💻</span><span>Web Development</span>
+      </button>
+      <button class="flex items-center gap-4 px-4 py-3 w-full rounded-full text-outline hover:text-primary hover:bg-surface-container mt-2">
+        <span class="material-symbols-outlined text-lg">add_circle</span><span>Add Goal</span>
+      </button>
+    </nav>
+    <div class="mt-auto pt-6" style="border-top: 1px solid rgba(173,179,178,0.15)">
+      <a href="#" class="flex items-center gap-4 px-4 py-2 text-on-surface-variant hover:bg-surface-container hover:text-primary rounded-full text-sm">
+        <span class="material-symbols-outlined text-lg">settings</span><span>Settings</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="ml-[280px] min-h-screen">
+    <header class="fixed top-0 right-0 w-[calc(100%-280px)] bg-background flex justify-between items-center px-12 h-20 z-40">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-outline text-lg">wb_sunny</span>
+        <span class="text-sm font-light text-on-surface-variant">Good morning</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-primary">
+          <span class="material-symbols-outlined text-lg">terminal</span>
+          <span style="display:inline-flex;align-items:center;gap:2px;padding:1px 5px;background:#f2f4f3;border-radius:4px;font-size:11px;font-weight:500;color:#757c7b;">Ctrl+K</span>
+        </button>
+        <button class="text-on-surface-variant hover:text-primary p-2 rounded-full hover:bg-surface-container">
+          <span class="material-symbols-outlined">dark_mode</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="pt-28 pb-20 px-12">
+
+      <!-- ============================================================ -->
+      <!--  VERSION 1: FOCUS CARDS                                      -->
+      <!--  Each goal is a soft editorial card with progress ring        -->
+      <!-- ============================================================ -->
+      <div id="state-cards" class="state-panel active">
+        <div class="max-w-3xl">
+          <div class="mb-10">
+            <h1 class="text-3xl font-headline font-extrabold text-on-surface tracking-tight">Today's Focus</h1>
+            <p class="text-sm text-on-surface-variant font-light mt-2">7 tasks waiting for your attention</p>
+          </div>
+
+          <div class="grid grid-cols-1 gap-6">
+            <!-- Card: English -->
+            <div class="bg-surface-container-lowest rounded-2xl editorial-shadow p-7 flex gap-7 group hover:bg-surface-container-low/50 cursor-pointer transition-all">
+              <div class="flex flex-col items-center gap-2 shrink-0">
+                <div class="relative">
+                  <svg class="progress-ring" width="64" height="64">
+                    <circle cx="32" cy="32" r="28" fill="none" stroke="#ebeeed" stroke-width="4" />
+                    <circle cx="32" cy="32" r="28" fill="none" stroke="#4e6358" stroke-width="4" stroke-linecap="round" stroke-dasharray="175.9" stroke-dashoffset="117.3" />
+                  </svg>
+                  <span class="absolute inset-0 flex items-center justify-center text-2xl">🌍</span>
+                </div>
+                <span class="text-[10px] font-label font-bold text-primary">1/3</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-base font-headline font-bold text-on-surface mb-3 group-hover:text-primary transition-all">Learn English</h3>
+                <div class="space-y-2">
+                  <div class="flex items-center gap-3">
+                    <button class="shrink-0 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+                    <span class="text-sm text-on-surface">Watch 2 episodes of British TV show</span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <button class="shrink-0 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+                    <span class="text-sm text-on-surface">Practice pronunciation for 15 mins</span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <button class="shrink-0 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+                    <span class="text-sm text-on-surface">Read one article from RSS feeds</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card: German -->
+            <div class="bg-surface-container-lowest rounded-2xl editorial-shadow p-7 flex gap-7 group hover:bg-surface-container-low/50 cursor-pointer transition-all">
+              <div class="flex flex-col items-center gap-2 shrink-0">
+                <div class="relative">
+                  <svg class="progress-ring" width="64" height="64">
+                    <circle cx="32" cy="32" r="28" fill="none" stroke="#ebeeed" stroke-width="4" />
+                    <circle cx="32" cy="32" r="28" fill="none" stroke="#4e6358" stroke-width="4" stroke-linecap="round" stroke-dasharray="175.9" stroke-dashoffset="87.95" />
+                  </svg>
+                  <span class="absolute inset-0 flex items-center justify-center text-2xl">🇩🇪</span>
+                </div>
+                <span class="text-[10px] font-label font-bold text-primary">1/2</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-base font-headline font-bold text-on-surface mb-3 group-hover:text-primary transition-all">German</h3>
+                <div class="space-y-2">
+                  <div class="flex items-center gap-3">
+                    <button class="shrink-0 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+                    <span class="text-sm text-on-surface">Complete Duolingo daily lesson</span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <button class="shrink-0 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+                    <span class="text-sm text-on-surface">Watch 1 German YouTube video with subtitles</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card: Web Dev -->
+            <div class="bg-surface-container-lowest rounded-2xl editorial-shadow p-7 flex gap-7 group hover:bg-surface-container-low/50 cursor-pointer transition-all">
+              <div class="flex flex-col items-center gap-2 shrink-0">
+                <div class="relative">
+                  <svg class="progress-ring" width="64" height="64">
+                    <circle cx="32" cy="32" r="28" fill="none" stroke="#ebeeed" stroke-width="4" />
+                    <circle cx="32" cy="32" r="28" fill="none" stroke="#4e6358" stroke-width="4" stroke-linecap="round" stroke-dasharray="175.9" stroke-dashoffset="175.9" />
+                  </svg>
+                  <span class="absolute inset-0 flex items-center justify-center text-2xl">💻</span>
+                </div>
+                <span class="text-[10px] font-label font-bold text-outline">0/2</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-base font-headline font-bold text-on-surface mb-3 group-hover:text-primary transition-all">Web Development</h3>
+                <div class="space-y-2">
+                  <div class="flex items-center gap-3">
+                    <button class="shrink-0 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+                    <span class="text-sm text-on-surface">Read the Signals RFC for Angular</span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <button class="shrink-0 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+                    <span class="text-sm text-on-surface">Set up Vitest for the component library</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================ -->
+      <!--  VERSION 2: MOMENTUM — Stepping stones journey               -->
+      <!-- ============================================================ -->
+      <div id="state-momentum" class="state-panel">
+        <div class="max-w-xl">
+          <!-- Big motivational number -->
+          <div class="mb-12 text-center">
+            <div class="inline-flex items-baseline gap-2">
+              <span class="text-7xl font-headline font-extrabold text-primary tracking-tighter">7</span>
+              <span class="text-lg font-headline font-bold text-on-surface-variant">steps to go</span>
+            </div>
+            <p class="text-sm text-outline mt-2 font-light">Small steps, big journeys</p>
+            <!-- Progress bar -->
+            <div class="mt-5 mx-auto max-w-xs h-1.5 bg-surface-container rounded-full overflow-hidden">
+              <div class="h-full bg-primary rounded-full" style="width: 22%;"></div>
+            </div>
+            <p class="text-[10px] font-label text-outline mt-2">2 of 9 completed today</p>
+          </div>
+
+          <!-- Stepping stones -->
+          <div class="space-y-0">
+            <!-- Stone 1 -->
+            <div class="flex items-start gap-4 px-2 py-3 rounded-xl hover:bg-surface-container-low transition-all group">
+              <div class="shrink-0 w-10 h-10 rounded-full bg-surface-container-lowest editorial-shadow flex items-center justify-center">
+                <button class="text-on-surface-variant group-hover:text-primary transition-all"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+              </div>
+              <div class="pt-1.5">
+                <p class="text-sm text-on-surface font-medium">Watch 2 episodes of British TV show</p>
+                <p class="text-xs text-outline mt-0.5 flex items-center gap-1"><span class="text-sm">🌍</span> Learn English</p>
+              </div>
+            </div>
+            <div class="stone-connector"></div>
+
+            <!-- Stone 2 -->
+            <div class="flex items-start gap-4 px-2 py-3 rounded-xl hover:bg-surface-container-low transition-all group">
+              <div class="shrink-0 w-10 h-10 rounded-full bg-surface-container-lowest editorial-shadow flex items-center justify-center">
+                <button class="text-on-surface-variant group-hover:text-primary transition-all"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+              </div>
+              <div class="pt-1.5">
+                <p class="text-sm text-on-surface font-medium">Complete Duolingo daily lesson</p>
+                <p class="text-xs text-outline mt-0.5 flex items-center gap-1"><span class="text-sm">🇩🇪</span> German</p>
+              </div>
+            </div>
+            <div class="stone-connector"></div>
+
+            <!-- Stone 3 -->
+            <div class="flex items-start gap-4 px-2 py-3 rounded-xl hover:bg-surface-container-low transition-all group">
+              <div class="shrink-0 w-10 h-10 rounded-full bg-surface-container-lowest editorial-shadow flex items-center justify-center">
+                <button class="text-on-surface-variant group-hover:text-primary transition-all"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+              </div>
+              <div class="pt-1.5">
+                <p class="text-sm text-on-surface font-medium">Practice pronunciation for 15 mins</p>
+                <p class="text-xs text-outline mt-0.5 flex items-center gap-1"><span class="text-sm">🌍</span> Learn English</p>
+              </div>
+            </div>
+            <div class="stone-connector"></div>
+
+            <!-- Stone 4 -->
+            <div class="flex items-start gap-4 px-2 py-3 rounded-xl hover:bg-surface-container-low transition-all group">
+              <div class="shrink-0 w-10 h-10 rounded-full bg-surface-container-lowest editorial-shadow flex items-center justify-center">
+                <button class="text-on-surface-variant group-hover:text-primary transition-all"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+              </div>
+              <div class="pt-1.5">
+                <p class="text-sm text-on-surface font-medium">Read the Signals RFC for Angular</p>
+                <p class="text-xs text-outline mt-0.5 flex items-center gap-1"><span class="text-sm">💻</span> Web Development</p>
+              </div>
+            </div>
+            <div class="stone-connector"></div>
+
+            <!-- Stone 5 -->
+            <div class="flex items-start gap-4 px-2 py-3 rounded-xl hover:bg-surface-container-low transition-all group">
+              <div class="shrink-0 w-10 h-10 rounded-full bg-surface-container-lowest editorial-shadow flex items-center justify-center">
+                <button class="text-on-surface-variant group-hover:text-primary transition-all"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+              </div>
+              <div class="pt-1.5">
+                <p class="text-sm text-on-surface font-medium">Watch 1 German YouTube video with subtitles</p>
+                <p class="text-xs text-outline mt-0.5 flex items-center gap-1"><span class="text-sm">🇩🇪</span> German</p>
+              </div>
+            </div>
+            <div class="stone-connector"></div>
+
+            <!-- Stone 6 -->
+            <div class="flex items-start gap-4 px-2 py-3 rounded-xl hover:bg-surface-container-low transition-all group">
+              <div class="shrink-0 w-10 h-10 rounded-full bg-surface-container-lowest editorial-shadow flex items-center justify-center">
+                <button class="text-on-surface-variant group-hover:text-primary transition-all"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+              </div>
+              <div class="pt-1.5">
+                <p class="text-sm text-on-surface font-medium">Read one article from RSS feeds</p>
+                <p class="text-xs text-outline mt-0.5 flex items-center gap-1"><span class="text-sm">🌍</span> Learn English</p>
+              </div>
+            </div>
+            <div class="stone-connector"></div>
+
+            <!-- Stone 7 -->
+            <div class="flex items-start gap-4 px-2 py-3 rounded-xl hover:bg-surface-container-low transition-all group">
+              <div class="shrink-0 w-10 h-10 rounded-full bg-surface-container-lowest editorial-shadow flex items-center justify-center">
+                <button class="text-on-surface-variant group-hover:text-primary transition-all"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+              </div>
+              <div class="pt-1.5">
+                <p class="text-sm text-on-surface font-medium">Set up Vitest for the component library</p>
+                <p class="text-xs text-outline mt-0.5 flex items-center gap-1"><span class="text-sm">💻</span> Web Development</p>
+              </div>
+            </div>
+
+            <!-- Finish line -->
+            <div class="stone-connector"></div>
+            <div class="flex items-center gap-4 px-2 py-3 opacity-40">
+              <div class="shrink-0 w-10 h-10 rounded-full bg-primary-container flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary text-xl filled">emoji_events</span>
+              </div>
+              <p class="text-sm font-headline font-bold text-primary">All done — enjoy your day</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================ -->
+      <!--  VERSION 3: GARDEN — Goal tiles with mini tree                -->
+      <!-- ============================================================ -->
+      <div id="state-garden" class="state-panel">
+        <div class="max-w-3xl">
+          <div class="mb-10">
+            <h1 class="text-3xl font-headline font-extrabold text-on-surface tracking-tight">Your Garden</h1>
+            <p class="text-sm text-on-surface-variant font-light mt-2">Tend your goals — complete tasks to help them grow</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Garden tile: English -->
+            <div class="bg-surface-container-lowest rounded-2xl editorial-shadow overflow-hidden group cursor-pointer hover:scale-[1.02] transition-all">
+              <!-- Mini tree area -->
+              <div class="h-36 bg-gradient-to-b from-[#d0ddd4] to-[#e8ebe6] flex items-end justify-center relative overflow-hidden">
+                <!-- Stylized mini tree (SVG placeholder) -->
+                <svg width="80" height="110" viewBox="0 0 80 110" class="mb-0">
+                  <ellipse cx="40" cy="106" rx="30" ry="4" fill="rgba(45,52,51,0.08)" />
+                  <rect x="37" y="50" width="6" height="58" rx="2" fill="#5c4033" />
+                  <line x1="40" y1="70" x2="28" y2="56" stroke="#5c4033" stroke-width="3" stroke-linecap="round" />
+                  <line x1="40" y1="60" x2="54" y2="48" stroke="#5c4033" stroke-width="3" stroke-linecap="round" />
+                  <circle cx="40" cy="35" r="22" fill="#5a7a5e" opacity="0.7" />
+                  <circle cx="30" cy="40" r="16" fill="#4e6358" opacity="0.6" />
+                  <circle cx="52" cy="38" r="14" fill="#6b8f6e" opacity="0.5" />
+                  <circle cx="40" cy="28" r="12" fill="#8ca295" opacity="0.4" />
+                </svg>
+              </div>
+              <div class="p-5">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="text-lg">🌍</span>
+                    <h3 class="text-sm font-headline font-bold text-on-surface">Learn English</h3>
+                  </div>
+                  <span class="text-[10px] font-label font-bold text-primary bg-primary-container px-2 py-0.5 rounded">3 seeds</span>
+                </div>
+                <div class="space-y-1.5">
+                  <div class="flex items-center gap-2">
+                    <button class="shrink-0 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-lg">check_box_outline_blank</span></button>
+                    <span class="text-xs text-on-surface truncate">Watch 2 episodes of British TV show</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button class="shrink-0 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-lg">check_box_outline_blank</span></button>
+                    <span class="text-xs text-on-surface truncate">Practice pronunciation for 15 mins</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button class="shrink-0 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-lg">check_box_outline_blank</span></button>
+                    <span class="text-xs text-on-surface truncate">Read one article from RSS feeds</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Garden tile: German -->
+            <div class="bg-surface-container-lowest rounded-2xl editorial-shadow overflow-hidden group cursor-pointer hover:scale-[1.02] transition-all">
+              <div class="h-36 bg-gradient-to-b from-[#d0ddd4] to-[#e8ebe6] flex items-end justify-center relative overflow-hidden">
+                <svg width="60" height="90" viewBox="0 0 60 90" class="mb-0">
+                  <ellipse cx="30" cy="86" rx="20" ry="4" fill="rgba(45,52,51,0.08)" />
+                  <rect x="28" y="45" width="4" height="42" rx="2" fill="#5c4033" />
+                  <line x1="30" y1="60" x2="22" y2="50" stroke="#5c4033" stroke-width="2" stroke-linecap="round" />
+                  <line x1="30" y1="55" x2="38" y2="46" stroke="#5c4033" stroke-width="2" stroke-linecap="round" />
+                  <circle cx="30" cy="35" r="15" fill="#5a7a5e" opacity="0.6" />
+                  <circle cx="24" cy="38" r="10" fill="#4e6358" opacity="0.5" />
+                  <circle cx="37" cy="36" r="9" fill="#6b8f6e" opacity="0.4" />
+                </svg>
+              </div>
+              <div class="p-5">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="text-lg">🇩🇪</span>
+                    <h3 class="text-sm font-headline font-bold text-on-surface">German</h3>
+                  </div>
+                  <span class="text-[10px] font-label font-bold text-primary bg-primary-container px-2 py-0.5 rounded">2 seeds</span>
+                </div>
+                <div class="space-y-1.5">
+                  <div class="flex items-center gap-2">
+                    <button class="shrink-0 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-lg">check_box_outline_blank</span></button>
+                    <span class="text-xs text-on-surface truncate">Complete Duolingo daily lesson</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button class="shrink-0 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-lg">check_box_outline_blank</span></button>
+                    <span class="text-xs text-on-surface truncate">Watch 1 German YouTube video</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Garden tile: Web Dev -->
+            <div class="bg-surface-container-lowest rounded-2xl editorial-shadow overflow-hidden group cursor-pointer hover:scale-[1.02] transition-all">
+              <div class="h-36 bg-gradient-to-b from-[#d0ddd4] to-[#e8ebe6] flex items-end justify-center relative overflow-hidden">
+                <!-- Tiny seedling -->
+                <svg width="40" height="60" viewBox="0 0 40 60" class="mb-2">
+                  <ellipse cx="20" cy="56" rx="14" ry="3" fill="rgba(45,52,51,0.06)" />
+                  <rect x="19" y="38" width="2" height="18" rx="1" fill="#5c4033" />
+                  <ellipse cx="14" cy="36" rx="6" ry="10" transform="rotate(-20 14 36)" fill="#5a7a5e" opacity="0.7" />
+                  <ellipse cx="26" cy="37" rx="5" ry="9" transform="rotate(15 26 37)" fill="#4e6358" opacity="0.6" />
+                </svg>
+              </div>
+              <div class="p-5">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="text-lg">💻</span>
+                    <h3 class="text-sm font-headline font-bold text-on-surface">Web Development</h3>
+                  </div>
+                  <span class="text-[10px] font-label font-bold text-primary bg-primary-container px-2 py-0.5 rounded">2 seeds</span>
+                </div>
+                <div class="space-y-1.5">
+                  <div class="flex items-center gap-2">
+                    <button class="shrink-0 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-lg">check_box_outline_blank</span></button>
+                    <span class="text-xs text-on-surface truncate">Read the Signals RFC for Angular</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button class="shrink-0 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-lg">check_box_outline_blank</span></button>
+                    <span class="text-xs text-on-surface truncate">Set up Vitest for component library</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p class="text-xs text-outline mt-8 text-center font-label">Complete tasks to grow your trees</p>
+        </div>
+      </div>
+
+      <!-- ============================================================ -->
+      <!--  VERSION 4: MORNING BRIEF — Editorial newspaper style        -->
+      <!-- ============================================================ -->
+      <div id="state-editorial" class="state-panel">
+        <div class="max-w-2xl">
+          <!-- Masthead -->
+          <div class="text-center mb-10">
+            <p class="text-[10px] font-label font-bold uppercase tracking-[0.3em] text-outline mb-3">Monday, April 7, 2026</p>
+            <h1 class="text-4xl font-headline font-extrabold text-on-surface tracking-tight leading-tight">The Morning Brief</h1>
+            <div class="w-12 h-0.5 bg-primary mx-auto mt-4 rounded-full"></div>
+          </div>
+
+          <!-- Quote block -->
+          <div class="bg-tertiary-container rounded-2xl p-8 mb-10 relative overflow-hidden">
+            <span class="material-symbols-outlined absolute top-4 right-6 text-6xl text-tertiary opacity-10 rotate-12">format_quote</span>
+            <div class="relative z-10">
+              <p class="text-lg font-headline font-semibold text-on-tertiary-container leading-relaxed italic">
+                "The secret of getting ahead is getting started."
+              </p>
+              <p class="text-xs font-label text-on-tertiary-fixed-variant mt-3">— Mark Twain</p>
+            </div>
+          </div>
+
+          <!-- Today's Edition header -->
+          <div class="flex items-center gap-4 mb-6">
+            <h2 class="text-[10px] font-label font-bold uppercase tracking-[0.3em] text-outline shrink-0">Today's Edition</h2>
+            <div class="flex-1 h-px bg-surface-container"></div>
+            <span class="text-xs font-label text-outline shrink-0">7 items</span>
+          </div>
+
+          <!-- Editorial items grouped -->
+          <!-- Section: English -->
+          <div class="mb-8">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-lg">🌍</span>
+              <h3 class="text-xs font-label font-bold uppercase tracking-[0.2em] text-primary">Learn English</h3>
+            </div>
+            <div class="space-y-0">
+              <div class="flex items-start gap-4 py-3 hover:bg-surface-container-low rounded-lg px-3 group transition-all">
+                <button class="shrink-0 mt-0.5 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+                <div>
+                  <p class="text-[15px] text-on-surface font-medium leading-snug">Watch 2 episodes of British TV show</p>
+                  <p class="text-xs text-outline mt-1 font-label">Entertainment · ~45 min</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-4 py-3 hover:bg-surface-container-low rounded-lg px-3 group transition-all">
+                <button class="shrink-0 mt-0.5 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+                <div>
+                  <p class="text-[15px] text-on-surface font-medium leading-snug">Practice pronunciation for 15 mins</p>
+                  <p class="text-xs text-outline mt-1 font-label">Speaking · ~15 min</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-4 py-3 hover:bg-surface-container-low rounded-lg px-3 group transition-all">
+                <button class="shrink-0 mt-0.5 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+                <div>
+                  <p class="text-[15px] text-on-surface font-medium leading-snug">Read one article from RSS feeds</p>
+                  <p class="text-xs text-outline mt-1 font-label">Reading · ~10 min</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subtle divider -->
+          <div class="flex items-center gap-4 mb-8">
+            <div class="flex-1 h-px bg-surface-container"></div>
+            <span class="material-symbols-outlined text-outline-variant text-sm">more_horiz</span>
+            <div class="flex-1 h-px bg-surface-container"></div>
+          </div>
+
+          <!-- Section: German -->
+          <div class="mb-8">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-lg">🇩🇪</span>
+              <h3 class="text-xs font-label font-bold uppercase tracking-[0.2em] text-primary">German</h3>
+            </div>
+            <div class="space-y-0">
+              <div class="flex items-start gap-4 py-3 hover:bg-surface-container-low rounded-lg px-3 group transition-all">
+                <button class="shrink-0 mt-0.5 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+                <div>
+                  <p class="text-[15px] text-on-surface font-medium leading-snug">Complete Duolingo daily lesson</p>
+                  <p class="text-xs text-outline mt-1 font-label">Practice · ~10 min</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-4 py-3 hover:bg-surface-container-low rounded-lg px-3 group transition-all">
+                <button class="shrink-0 mt-0.5 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+                <div>
+                  <p class="text-[15px] text-on-surface font-medium leading-snug">Watch 1 German YouTube video with subtitles</p>
+                  <p class="text-xs text-outline mt-1 font-label">Listening · ~20 min</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-4 mb-8">
+            <div class="flex-1 h-px bg-surface-container"></div>
+            <span class="material-symbols-outlined text-outline-variant text-sm">more_horiz</span>
+            <div class="flex-1 h-px bg-surface-container"></div>
+          </div>
+
+          <!-- Section: Web Dev -->
+          <div class="mb-8">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-lg">💻</span>
+              <h3 class="text-xs font-label font-bold uppercase tracking-[0.2em] text-primary">Web Development</h3>
+            </div>
+            <div class="space-y-0">
+              <div class="flex items-start gap-4 py-3 hover:bg-surface-container-low rounded-lg px-3 group transition-all">
+                <button class="shrink-0 mt-0.5 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+                <div>
+                  <p class="text-[15px] text-on-surface font-medium leading-snug">Read the Signals RFC for Angular</p>
+                  <p class="text-xs text-outline mt-1 font-label">Deep dive · ~30 min</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-4 py-3 hover:bg-surface-container-low rounded-lg px-3 group transition-all">
+                <button class="shrink-0 mt-0.5 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-xl">check_box_outline_blank</span></button>
+                <div>
+                  <p class="text-[15px] text-on-surface font-medium leading-snug">Set up Vitest for the component library</p>
+                  <p class="text-xs text-outline mt-1 font-label">Setup · ~20 min</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="text-center mt-12 pb-4">
+            <div class="w-8 h-0.5 bg-outline-variant mx-auto mb-3 rounded-full"></div>
+            <p class="text-[10px] font-label text-outline uppercase tracking-[0.2em]">End of today's brief</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function switchState(id) {
+      document.querySelectorAll('.state-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.state-panel').forEach(p => p.classList.remove('active'));
+      document.querySelector(`[data-state="${id}"]`).classList.add('active');
+      document.getElementById(`state-${id}`).classList.add('active');
+    }
+  </script>
+</body>
+</html>

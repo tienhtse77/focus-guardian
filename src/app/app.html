@@ -3,7 +3,9 @@
   <app-sidebar
     [goals]="goals()"
     [selectedGoalId]="selectedGoalId()"
+    [isHome]="isHome()"
     (goalSelected)="selectGoal($event)"
+    (homeClicked)="goHome()"
     (addGoalClicked)="openAddGoal()"
     (goalsReordered)="reorderGoals($event)"
   />
@@ -32,34 +34,18 @@
 
     <!-- Content -->
     <div class="pt-28 pb-20 px-12">
-      @if (selectedGoal()) {
+      @if (isHome()) {
+        <app-home
+          [goals]="goals()"
+          (goalClicked)="selectGoal($event)"
+          (addGoalClicked)="openAddGoal()"
+        />
+      } @else if (selectedGoal()) {
         <app-goal-view
           [goal]="selectedGoal()!"
           (editClicked)="openEditGoal(selectedGoal()!)"
           (deleteClicked)="deleteGoal(selectedGoal()!.id)"
         />
-      } @else {
-        <!-- Empty State — Welcome -->
-        <div class="max-w-lg mx-auto text-center py-20">
-          <div class="bg-tertiary-container rounded-lg p-12 editorial-shadow relative overflow-hidden mb-10">
-            <span class="material-symbols-outlined absolute top-6 right-8 text-7xl text-tertiary opacity-10 rotate-12">spa</span>
-            <div class="relative z-10">
-              <span class="material-symbols-outlined text-primary text-4xl mb-4 block">self_improvement</span>
-              <h2 class="text-3xl font-headline font-extrabold text-on-tertiary-container tracking-tight mb-3">Welcome to Focus Guardian</h2>
-              <p class="text-base text-on-tertiary-fixed-variant leading-relaxed">
-                Your curated sanctuary for mindful browsing. Create your first goal to start collecting content that matters.
-              </p>
-            </div>
-          </div>
-          <button (click)="openAddGoal()"
-            class="bg-primary text-on-primary px-8 py-4 rounded-xl font-bold text-base tracking-wide editorial-shadow flex items-center justify-center gap-3 mx-auto hover:bg-primary-dim tonal-lift">
-            <span class="material-symbols-outlined">add_circle</span>
-            Create Your First Goal
-          </button>
-          <p class="text-sm text-on-surface-variant mt-6 leading-relaxed max-w-sm mx-auto">
-            Goals help you organize content sources and saved pages around topics you care about.
-          </p>
-        </div>
       }
     </div>
   </div>
