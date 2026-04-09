@@ -193,7 +193,7 @@ import { ImportFeedsComponent } from '../import-feeds/import-feeds.component';
                 <h3 class="text-lg font-headline font-bold text-on-surface tracking-tight">Saved Pages</h3>
                 <span class="text-xs font-label font-bold text-primary bg-primary-container px-2 py-1 rounded">{{ savedPages().length }} PAGES</span>
               </div>
-              <div class="space-y-2">
+              <div class="space-y-0">
                 @for (page of savedPages(); track page.id) {
                   <app-saved-page-card
                     [page]="page"

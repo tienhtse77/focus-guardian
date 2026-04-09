@@ -7,72 +7,65 @@ import { SavedPage, PageStatus } from '../../services/storage.service';
     standalone: true,
     imports: [CommonModule],
     template: `
-    <div class="flex items-center gap-4 p-4 rounded-lg bg-surface-container-lowest editorial-shadow hover:bg-surface-container-low group transition-all duration-200">
+    <a
+      [href]="page.url"
+      target="_blank"
+      (click)="onOpen()"
+      class="flex items-start gap-4 px-3 py-3.5 rounded-lg hover:bg-surface-container-low group transition-all duration-200 no-underline"
+    >
       <!-- Favicon -->
-      <img
-        [src]="page.favicon || 'https://www.google.com/s2/favicons?domain=' + getDomain(page.url) + '&sz=32'"
-        class="w-5 h-5 rounded shrink-0"
-        alt=""
-        (error)="onFaviconError($event)"
-      />
+      <div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center shrink-0 mt-0.5">
+        <img
+          [src]="page.favicon || 'https://www.google.com/s2/favicons?domain=' + getDomain(page.url) + '&sz=32'"
+          class="w-4 h-4 rounded-sm"
+          alt=""
+          (error)="onFaviconError($event)"
+        />
+      </div>
 
       <!-- Content -->
       <div class="flex-1 min-w-0">
-        <a
-          [href]="page.url"
-          target="_blank"
-          (click)="onOpen()"
-          class="block text-sm font-semibold text-on-surface hover:text-primary truncate"
-        >
+        <p class="text-sm font-medium text-on-surface group-hover:text-primary leading-snug transition-all duration-200 line-clamp-1">
           {{ page.title }}
-        </a>
-        <div class="flex items-center gap-3 mt-1">
-          <span class="text-xs text-on-surface-variant font-label">{{ getDomain(page.url) }}</span>
-          <span class="text-[10px] font-label font-bold uppercase tracking-widest px-2 py-0.5 rounded" [class]="getStatusClass()">
+        </p>
+        <div class="flex items-center gap-2 mt-1">
+          <span class="text-xs text-outline font-label">{{ getDomain(page.url) }}</span>
+          <span class="text-[10px] font-label font-bold uppercase tracking-widest px-1.5 py-0.5 rounded" [class]="getStatusClass()">
             {{ getStatusLabel() }}
           </span>
         </div>
       </div>
 
       <!-- Actions -->
-      <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+      <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 shrink-0 transition-all duration-200" (click)="$event.preventDefault(); $event.stopPropagation()">
         @if (page.status !== 'viewed') {
           <button
             (click)="onStatusChange('viewed')"
-            class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-primary transition-all duration-200"
+            class="p-1.5 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-primary transition-all duration-200"
             title="Mark as viewed"
           >
-            <span class="material-symbols-outlined text-lg">check_circle</span>
+            <span class="material-symbols-outlined" style="font-size: 18px;">check_circle</span>
           </button>
         }
 
-          <button
+        <button
           (click)="onStatusChange(page.status === 'favorite' ? 'viewed' : 'favorite')"
-          class="p-2 rounded-full hover:bg-surface-container transition-all duration-200"
+          class="p-1.5 rounded-full hover:bg-surface-container transition-all duration-200"
           [class]="page.status === 'favorite' ? 'text-tertiary' : 'text-on-surface-variant hover:text-tertiary'"
           title="Favorite"
         >
-          <span class="material-symbols-outlined text-lg" [class.filled]="page.status === 'favorite'">star</span>
-        </button>
-
-        <button
-          (click)="onStatusChange(page.status === 'watch-later' ? 'viewed' : 'watch-later')"
-          class="p-2 rounded-full hover:bg-surface-container transition-all duration-200"
-          [class]="page.status === 'watch-later' ? 'text-primary' : 'text-on-surface-variant hover:text-primary'"
-          title="Watch later"
-        >
-          <span class="material-symbols-outlined text-lg" [class.filled]="page.status === 'watch-later'">schedule</span>
+          <span class="material-symbols-outlined" style="font-size: 18px;" [class.filled]="page.status === 'favorite'">star</span>
         </button>
 
         <button
           (click)="onDelete()"
-          class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-error transition-all duration-200"
+          class="p-1.5 rounded-full hover:bg-surface-container text-on-surface-variant hover:text-error transition-all duration-200"
           title="Remove"
         >
-          <span class="material-symbols-outlined text-lg">delete</span>
+          <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
         </button>
       </div>
-    </div>
+    </a>
   `
 })
 export class SavedPageCardComponent {
