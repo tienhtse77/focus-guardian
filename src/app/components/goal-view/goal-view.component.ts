@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, signal, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Goal, Content, SavedPage, PageStatus, TodoItem } from '../../services/storage.service';
+import { FormsModule } from '@angular/forms';
+import { Goal, Content, SavedPage, PageStatus, TodoItem, RecurrenceRule } from '../../services/storage.service';
 import { ContentAggregatorService } from '../../services/content-aggregator.service';
 import { ApiService } from '../../services/api.service';
 import { ContentCardComponent } from '../content-card/content-card.component';
@@ -10,7 +11,7 @@ import { ImportFeedsComponent } from '../import-feeds/import-feeds.component';
 @Component({
   selector: 'app-goal-view',
   standalone: true,
-  imports: [CommonModule, ContentCardComponent, SavedPageCardComponent, ImportFeedsComponent],
+  imports: [CommonModule, FormsModule, ContentCardComponent, SavedPageCardComponent, ImportFeedsComponent],
   styles: [`:host { display: contents; }`],
   template: `
     <div class="max-w-7xl mx-auto">
@@ -56,15 +57,119 @@ import { ImportFeedsComponent } from '../import-feeds/import-feeds.component';
               </div>
               <div class="space-y-1">
                 @for (todo of todoItems(); track todo.id) {
-                  <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-container-low group transition-all duration-200">
+                  <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-container group transition-all duration-200"
+                    [ngClass]="editingTodoId() === todo.id ? 'ring-2 ring-primary/20 bg-surface-container' : ''"
+                  >
                     <button (click)="toggleTodo(todo)" class="shrink-0 text-on-surface-variant hover:text-primary transition-all duration-200">
                       <span class="material-symbols-outlined text-xl" [class.filled]="todo.isCompleted" [class.text-primary]="todo.isCompleted">
                         {{ todo.isCompleted ? 'check_box' : 'check_box_outline_blank' }}
                       </span>
                     </button>
-                    <span class="flex-1 text-sm" [class]="todo.isCompleted ? 'text-on-surface-variant line-through' : 'text-on-surface'">
-                      {{ todo.title }}
-                    </span>
+                    @if (editingTodoId() === todo.id) {
+                      <input
+                        type="text"
+                        [value]="todo.title"
+                        (keydown.enter)="saveTodoEdit(todo, $event)"
+                        (keydown.escape)="cancelTodoEdit()"
+                        (blur)="saveTodoEdit(todo, $event)"
+                        class="flex-1 text-sm text-on-surface bg-transparent focus:outline-none inline-edit"
+                        autofocus
+                      />
+                      <span class="flex items-center gap-2 text-[10px] font-label text-outline shrink-0">
+                        <span class="inline-flex items-center px-1.5 py-0.5 bg-surface-container-high rounded text-[10px] font-medium text-outline">&#8629; save</span>
+                        <span class="inline-flex items-center px-1.5 py-0.5 bg-surface-container-high rounded text-[10px] font-medium text-outline">esc</span>
+                      </span>
+                    } @else {
+                      <span class="flex-1 text-sm cursor-text" [class]="todo.isCompleted ? 'text-on-surface-variant line-through' : 'text-on-surface'" (click)="startEditTodo(todo)">
+                        {{ todo.title }}
+                      </span>
+                      <!-- Recurrence badge (clickable) -->
+                      <div class="relative shrink-0">
+                        @if (todo.recurrenceRule) {
+                          <button (click)="toggleRecurrencePicker(todo, $event)"
+                            [class]="'flex items-center gap-1 text-[10px] font-label font-semibold px-2 py-0.5 rounded-full transition-all duration-200 ' + (recurrencePickerId() === todo.id ? 'text-primary bg-primary-container' : 'text-on-surface-variant bg-surface-container hover:bg-surface-container-high')">
+                            <span class="material-symbols-outlined" style="font-size: 14px;">repeat</span>
+                            {{ getRecurrenceLabel(todo.recurrenceRule) }}
+                          </button>
+                        } @else if (!todo.isCompleted) {
+                          <button (click)="toggleRecurrencePicker(todo, $event)"
+                            [class]="'flex items-center gap-1 text-[10px] font-label px-2 py-0.5 rounded-full hover:bg-surface-container transition-all duration-200 ' + (recurrencePickerId() === todo.id ? 'text-primary opacity-100' : 'text-outline opacity-0 group-hover:opacity-100')">
+                            <span class="material-symbols-outlined" style="font-size: 14px;">repeat</span>
+                            <span>Set repeat</span>
+                          </button>
+                        }
+
+                        <!-- Recurrence dropdown -->
+                        @if (recurrencePickerId() === todo.id) {
+                          <div class="absolute right-0 top-7 z-30 w-72 bg-surface-container-lowest rounded-xl overflow-hidden" style="box-shadow: 0 16px 48px rgba(45,52,51,0.12);">
+                            <!-- Quick presets -->
+                            <div class="py-2">
+                              <button (click)="setRecurrence(todo, null)" class="w-full px-4 py-2 text-left text-sm text-on-surface hover:bg-surface-container-low flex items-center gap-3 transition-all duration-200">
+                                <span class="material-symbols-outlined text-lg text-on-surface-variant">block</span>
+                                <span class="flex-1">Does not repeat</span>
+                                @if (!todo.recurrenceRule) { <span class="material-symbols-outlined text-sm text-primary">check</span> }
+                              </button>
+                              <button (click)="setRecurrence(todo, { type: 'daily', interval: 1 })"
+                                [class]="'w-full px-4 py-2 text-left text-sm flex items-center gap-3 transition-all duration-200 ' + (todo.recurrenceRule?.type === 'daily' ? 'text-primary font-semibold bg-primary-container/30' : 'text-on-surface hover:bg-surface-container-low')">
+                                <span class="material-symbols-outlined text-lg" [class]="todo.recurrenceRule?.type === 'daily' ? 'text-primary' : 'text-on-surface-variant'">repeat</span>
+                                <span class="flex-1">Daily</span>
+                                @if (todo.recurrenceRule?.type === 'daily') { <span class="material-symbols-outlined text-sm text-primary">check</span> }
+                              </button>
+                              <button (click)="setRecurrence(todo, { type: 'monthly', interval: 1, dayOfMonth: todayDate() })" class="w-full px-4 py-2 text-left text-sm text-on-surface hover:bg-surface-container-low flex items-center gap-3 transition-all duration-200">
+                                <span class="material-symbols-outlined text-lg text-on-surface-variant">repeat</span>
+                                <span class="flex-1">Monthly on the {{ todayDate() }}{{ ordinalSuffix(todayDate()) }}</span>
+                              </button>
+                            </div>
+
+                            <!-- Day of week selector — always visible -->
+                            <div class="px-4 py-3 bg-surface-container-low/50">
+                              <span class="text-xs font-label text-on-surface-variant font-semibold block mb-2.5">Weekly on</span>
+                              <div class="flex gap-1.5 justify-between">
+                                @for (day of dayLabels; track $index) {
+                                  <button (click)="toggleWeekDay(todo, $index)"
+                                    [class]="'w-9 h-9 rounded-full text-xs font-label font-semibold transition-all duration-200 ' + (isDaySelected(todo, $index) ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high')">
+                                    {{ day }}
+                                  </button>
+                                }
+                              </div>
+                            </div>
+
+                            <!-- Custom interval -->
+                            @if (!showCustomRecurrence()) {
+                              <div class="py-2">
+                                <button (click)="openCustomRecurrence(todo)" class="w-full px-4 py-2 text-left text-sm text-on-surface hover:bg-surface-container-low flex items-center gap-3 transition-all duration-200">
+                                  <span class="material-symbols-outlined text-lg text-on-surface-variant">tune</span>
+                                  <span class="flex-1">Every N days/weeks...</span>
+                                </button>
+                              </div>
+                            } @else {
+                              <div class="px-4 py-3 space-y-3">
+                                <div class="flex items-center gap-3">
+                                  <span class="text-sm text-on-surface font-medium shrink-0">Every</span>
+                                  <input type="number" [(ngModel)]="customInterval" min="1"
+                                    class="inline-edit w-14 px-2 py-1.5 rounded-lg text-sm text-center text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                    style="background: var(--color-surface-container-low);" />
+                                  <select [(ngModel)]="customType"
+                                    class="inline-edit px-2 py-1.5 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                    style="background: var(--color-surface-container-low);">
+                                    <option value="day">days</option>
+                                    <option value="week">weeks</option>
+                                    <option value="month">months</option>
+                                  </select>
+                                </div>
+                                <div class="flex justify-end gap-2">
+                                  <button (click)="showCustomRecurrence.set(false)" class="px-3 py-1.5 text-sm text-on-surface-variant hover:text-on-surface rounded-lg hover:bg-surface-container-low font-semibold transition-all duration-200">Cancel</button>
+                                  <button (click)="saveCustomRecurrence(todo)" class="px-3 py-1.5 text-sm text-on-primary bg-primary rounded-lg font-semibold hover:bg-primary-dim transition-all duration-200">Save</button>
+                                </div>
+                              </div>
+                            }
+                          </div>
+                        }
+                      </div>
+                      @if (todo.currentStreak && todo.currentStreak > 0) {
+                        <span class="flex items-center gap-0.5 text-xs font-label font-bold shrink-0" style="color: #d97706;">🔥 {{ todo.currentStreak }}</span>
+                      }
+                    }
                     <button (click)="deleteTodo(todo)" class="shrink-0 opacity-0 group-hover:opacity-100 p-1 rounded-full text-on-surface-variant hover:text-error hover:bg-error-container/20 transition-all duration-200">
                       <span class="material-symbols-outlined text-lg">close</span>
                     </button>
@@ -243,6 +348,12 @@ export class GoalViewComponent implements OnInit, OnChanges {
   isLoading = signal(false);
   showImportModal = signal(false);
   importMessage = signal<string>('');
+  editingTodoId = signal<string | null>(null);
+  recurrencePickerId = signal<string | null>(null);
+  showCustomRecurrence = signal(false);
+  customInterval = 1;
+  customType: 'day' | 'week' | 'month' = 'week';
+  customDays: boolean[] = [false, false, false, false, false, false, false]; // Sun-Sat
 
   async ngOnInit() {
     await this.loadContent();
@@ -274,12 +385,15 @@ export class GoalViewComponent implements OnInit, OnChanges {
   }
 
   async loadTodoItems() {
-    const items = await this.api.getTodoItems(this.goal.id);
-    items.sort((a, b) => {
+    const today = new Date().toISOString().split('T')[0];
+    const items = await this.api.getTodoItems(this.goal.id, today);
+    // Filter out templates — only show one-time tasks and instances
+    const visible = items.filter(t => !t.isRecurringTemplate);
+    visible.sort((a, b) => {
       if (a.isCompleted !== b.isCompleted) return a.isCompleted ? 1 : -1;
       return a.createdAt - b.createdAt;
     });
-    this.todoItems.set(items);
+    this.todoItems.set(visible);
   }
 
   async toggleTodo(item: TodoItem) {
@@ -294,6 +408,127 @@ export class GoalViewComponent implements OnInit, OnChanges {
 
   get completedTodoCount(): number {
     return this.todoItems().filter(t => t.isCompleted).length;
+  }
+
+  startEditTodo(todo: TodoItem) {
+    this.editingTodoId.set(todo.id);
+  }
+
+  private editCancelled = false;
+
+  cancelTodoEdit() {
+    this.editCancelled = true;
+    this.editingTodoId.set(null);
+  }
+
+  async saveTodoEdit(todo: TodoItem, event: Event) {
+    if (this.editCancelled) {
+      this.editCancelled = false;
+      return;
+    }
+    const input = event.target as HTMLInputElement;
+    const newTitle = input.value.trim();
+    if (newTitle && newTitle !== todo.title) {
+      await this.api.updateTodoItem(todo.id, { title: newTitle });
+      await this.loadTodoItems();
+    }
+    this.editingTodoId.set(null);
+  }
+
+  getRecurrenceLabel(rule?: RecurrenceRule): string {
+    if (!rule) return '';
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    switch (rule.type) {
+      case 'daily':
+        return rule.interval === 1 ? 'Daily' : `Every ${rule.interval} days`;
+      case 'weekly':
+        if (rule.daysOfWeek?.length) {
+          if (JSON.stringify([...rule.daysOfWeek].sort()) === JSON.stringify([1,2,3,4,5])) return 'Weekdays';
+          return rule.daysOfWeek.map(d => dayNames[d]).join(' \u00b7 ');
+        }
+        return rule.interval === 1 ? 'Weekly' : `Every ${rule.interval} weeks`;
+      case 'monthly':
+        return rule.interval === 1 ? 'Monthly' : `Every ${rule.interval} months`;
+      default:
+        return rule.interval === 1 ? 'Daily' : `Every ${rule.interval} days`;
+    }
+  }
+
+  // --- Recurrence picker ---
+  dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+  toggleRecurrencePicker(todo: TodoItem, event: Event) {
+    event.stopPropagation();
+    if (this.recurrencePickerId() === todo.id) {
+      this.recurrencePickerId.set(null);
+      this.showCustomRecurrence.set(false);
+    } else {
+      this.recurrencePickerId.set(todo.id);
+      this.showCustomRecurrence.set(false);
+      // Pre-fill custom form from existing rule
+      if (todo.recurrenceRule) {
+        this.customType = todo.recurrenceRule.type === 'monthly' ? 'month' : todo.recurrenceRule.type === 'weekly' ? 'week' : 'day';
+        this.customInterval = todo.recurrenceRule.interval;
+        this.customDays = [0,1,2,3,4,5,6].map(d => todo.recurrenceRule?.daysOfWeek?.includes(d) ?? false);
+      } else {
+        this.customType = 'week';
+        this.customInterval = 1;
+        this.customDays = [false, false, false, false, false, false, false];
+      }
+    }
+  }
+
+  async setRecurrence(todo: TodoItem, rule: RecurrenceRule | null) {
+    await this.api.updateTodoItem(todo.id, { recurrenceRule: rule });
+    this.recurrencePickerId.set(null);
+    this.showCustomRecurrence.set(false);
+    await this.loadTodoItems();
+  }
+
+  openCustomRecurrence(todo: TodoItem) {
+    this.showCustomRecurrence.set(true);
+  }
+
+  async saveCustomRecurrence(todo: TodoItem) {
+    const rule: RecurrenceRule = {
+      type: this.customType === 'day' ? 'daily' : this.customType === 'week' ? 'weekly' : 'monthly',
+      interval: this.customInterval,
+    };
+    if (this.customType === 'week') {
+      rule.daysOfWeek = this.customDays.map((v, i) => v ? i : -1).filter(i => i >= 0);
+      if (rule.daysOfWeek.length === 0) rule.daysOfWeek = [new Date().getDay()];
+    }
+    if (this.customType === 'month') {
+      rule.dayOfMonth = new Date().getDate();
+    }
+    await this.setRecurrence(todo, rule);
+  }
+
+  isDaySelected(todo: TodoItem, dayIndex: number): boolean {
+    return todo.recurrenceRule?.type === 'weekly' && (todo.recurrenceRule.daysOfWeek?.includes(dayIndex) ?? false);
+  }
+
+  async toggleWeekDay(todo: TodoItem, dayIndex: number) {
+    const current = todo.recurrenceRule?.type === 'weekly' ? [...(todo.recurrenceRule.daysOfWeek ?? [])] : [];
+    const idx = current.indexOf(dayIndex);
+    if (idx >= 0) {
+      current.splice(idx, 1);
+    } else {
+      current.push(dayIndex);
+    }
+    if (current.length === 0) {
+      await this.setRecurrence(todo, null);
+    } else {
+      await this.setRecurrence(todo, { type: 'weekly', interval: 1, daysOfWeek: current.sort() });
+    }
+  }
+
+  todayDow(): number { return new Date().getDay(); }
+  todayDowName(): string { return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date().getDay()]; }
+  todayDate(): number { return new Date().getDate(); }
+  ordinalSuffix(n: number): string {
+    if (n > 3 && n < 21) return 'th';
+    switch (n % 10) { case 1: return 'st'; case 2: return 'nd'; case 3: return 'rd'; default: return 'th'; }
   }
 
   async refreshContent() {

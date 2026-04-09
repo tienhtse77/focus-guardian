@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../environment';
-import { Goal, Content, SavedPage, ContentSource, PageStatus, TodoItem } from './storage.service';
+import { Goal, Content, SavedPage, ContentSource, PageStatus, TodoItem, RecurrenceRule } from './storage.service';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -112,9 +112,12 @@ export class ApiService {
 
   // --- TodoItems ---
 
-  async getTodoItems(goalId: string): Promise<TodoItem[]> {
+  async getTodoItems(goalId: string, date?: string): Promise<TodoItem[]> {
     try {
-      const dtos = await firstValueFrom(this.http.get<any[]>(`${this.baseUrl}/goals/${goalId}/todos`));
+      const url = date
+        ? `${this.baseUrl}/goals/${goalId}/todos?date=${date}`
+        : `${this.baseUrl}/goals/${goalId}/todos`;
+      const dtos = await firstValueFrom(this.http.get<any[]>(url));
       return (dtos ?? []).map(dto => this.mapTodoItemFromApi(dto));
     } catch (error) {
       console.error('Failed to fetch todo items:', error);
@@ -122,13 +125,27 @@ export class ApiService {
     }
   }
 
-  async createTodoItem(goalId: string, title: string): Promise<TodoItem> {
-    const body = { title };
-    const dto = await firstValueFrom(this.http.post<any>(`${this.baseUrl}/goals/${goalId}/todos`, body));
+  async createTodoItem(goalId: string | null, title: string, recurrenceRule?: RecurrenceRule): Promise<TodoItem> {
+    const body: any = { title };
+    if (recurrenceRule) body.recurrenceRule = recurrenceRule;
+    const url = goalId
+      ? `${this.baseUrl}/goals/${goalId}/todos`
+      : `${this.baseUrl}/todos`;
+    const dto = await firstValueFrom(this.http.post<any>(url, body));
     return this.mapTodoItemFromApi(dto);
   }
 
-  async updateTodoItem(todoId: string, updates: { title?: string; isCompleted?: boolean }): Promise<TodoItem> {
+  async getGeneralTodoItems(): Promise<TodoItem[]> {
+    try {
+      const dtos = await firstValueFrom(this.http.get<any[]>(`${this.baseUrl}/todos/general`));
+      return (dtos ?? []).map(dto => this.mapTodoItemFromApi(dto));
+    } catch (error) {
+      console.error('Failed to fetch general todo items:', error);
+      return [];
+    }
+  }
+
+  async updateTodoItem(todoId: string, updates: { title?: string; isCompleted?: boolean; recurrenceRule?: RecurrenceRule | null }): Promise<TodoItem> {
     const dto = await firstValueFrom(
       this.http.patch<any>(`${this.baseUrl}/todos/${todoId}`, updates)
     );
@@ -149,6 +166,12 @@ export class ApiService {
       isCompleted: dto.isCompleted ?? false,
       createdAt: dto.createdAt ? new Date(dto.createdAt).getTime() : Date.now(),
       completedAt: dto.completedAt ? new Date(dto.completedAt).getTime() : undefined,
+      recurrenceRule: dto.recurrenceRule ?? undefined,
+      isRecurringTemplate: dto.isRecurringTemplate ?? undefined,
+      templateId: dto.templateId ?? undefined,
+      dueDate: dto.dueDate ?? undefined,
+      currentStreak: dto.currentStreak ?? undefined,
+      longestStreak: dto.longestStreak ?? undefined,
     };
   }
 

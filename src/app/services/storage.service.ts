@@ -29,6 +29,14 @@ export interface Content {
     fetchedAt: number;
 }
 
+export interface RecurrenceRule {
+    type: 'daily' | 'weekly' | 'monthly' | 'custom';
+    interval: number;
+    daysOfWeek?: number[];  // 0=Sun, 1=Mon, ..., 6=Sat
+    dayOfMonth?: number;
+    endDate?: string;  // ISO date
+}
+
 export interface TodoItem {
     id: string;
     goalId: string;
@@ -36,6 +44,12 @@ export interface TodoItem {
     isCompleted: boolean;
     createdAt: number; // epoch ms
     completedAt?: number; // epoch ms
+    recurrenceRule?: RecurrenceRule;
+    isRecurringTemplate?: boolean;
+    templateId?: string;
+    dueDate?: string;  // ISO date
+    currentStreak?: number;
+    longestStreak?: number;
 }
 
 export type PageStatus = 'unread' | 'viewed' | 'favorite' | 'watch-later';

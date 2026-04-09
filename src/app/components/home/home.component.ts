@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, signal, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Goal, TodoItem } from '../../services/storage.service';
+import { Goal, TodoItem, RecurrenceRule } from '../../services/storage.service';
 import { ApiService } from '../../services/api.service';
 
 interface GoalTodos {
@@ -43,13 +43,64 @@ const QUOTES = [
         </div>
       </div>
 
-      @if (goalTodos().length > 0) {
+      @if (goalTodos().length > 0 || generalTodos().length > 0) {
         <!-- Today's Edition header -->
         <div class="flex items-center gap-4 mb-6">
           <h2 class="text-[10px] font-label font-bold uppercase tracking-[0.3em] text-outline shrink-0">Today's Edition</h2>
           <div class="flex-1 h-px bg-surface-container"></div>
           <span class="text-xs font-label text-outline shrink-0">{{ totalOpenTasks() }} items</span>
         </div>
+
+        <!-- General tasks (no goal) -->
+        @if (generalTodos().length > 0) {
+          <div class="mb-8">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="material-symbols-outlined text-lg text-on-surface-variant">inbox</span>
+              <h3 class="text-xs font-label font-bold uppercase tracking-[0.2em] text-primary">General</h3>
+            </div>
+            <div class="space-y-0">
+              @for (todo of generalTodos(); track todo.id) {
+                <div class="flex items-center gap-4 py-3 hover:bg-surface-container rounded-lg px-3 group transition-all duration-200"
+                  [ngClass]="editingTodoId() === todo.id ? 'ring-2 ring-primary/20 bg-surface-container' : ''"
+                >
+                  <button
+                    (click)="onToggleTodo(todo)"
+                    class="shrink-0 text-on-surface-variant hover:text-primary transition-all duration-200"
+                  >
+                    <span class="material-symbols-outlined text-xl">check_box_outline_blank</span>
+                  </button>
+                  @if (editingTodoId() === todo.id) {
+                    <input
+                      type="text"
+                      [value]="todo.title"
+                      (keydown.enter)="saveTodoEdit(todo, $event)"
+                      (keydown.escape)="cancelTodoEdit()"
+                      (blur)="saveTodoEdit(todo, $event)"
+                      class="flex-1 text-[15px] text-on-surface font-medium bg-transparent focus:outline-none inline-edit"
+                      autofocus
+                    />
+                  } @else {
+                    <span class="flex-1 text-[15px] text-on-surface font-medium leading-snug cursor-text" (click)="startEditTodo(todo)">{{ todo.title }}</span>
+                    @if (todo.recurrenceRule) {
+                      <span class="flex items-center gap-1 text-[10px] font-label font-semibold text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full shrink-0">
+                        <span class="material-symbols-outlined" style="font-size: 14px;">repeat</span>
+                        {{ getRecurrenceLabel(todo.recurrenceRule) }}
+                      </span>
+                    }
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          @if (goalTodos().length > 0) {
+            <div class="flex items-center gap-4 mb-8">
+              <div class="flex-1 h-px bg-surface-container"></div>
+              <span class="material-symbols-outlined text-outline-variant text-sm">more_horiz</span>
+              <div class="flex-1 h-px bg-surface-container"></div>
+            </div>
+          }
+        }
 
         <!-- Goal sections -->
         @for (group of goalTodos(); track group.goal.id; let last = $last) {
@@ -60,16 +111,41 @@ const QUOTES = [
             </div>
             <div class="space-y-0">
               @for (todo of group.todos; track todo.id) {
-                <div class="flex items-start gap-4 py-3 hover:bg-surface-container-low rounded-lg px-3 group transition-all duration-200">
+                <div class="flex items-center gap-4 py-3 hover:bg-surface-container rounded-lg px-3 group transition-all duration-200"
+                  [ngClass]="editingTodoId() === todo.id ? 'ring-2 ring-primary/20 bg-surface-container' : ''"
+                >
                   <button
                     (click)="onToggleTodo(todo)"
-                    class="shrink-0 mt-0.5 text-on-surface-variant hover:text-primary transition-all duration-200"
+                    class="shrink-0 text-on-surface-variant hover:text-primary transition-all duration-200"
                   >
                     <span class="material-symbols-outlined text-xl">check_box_outline_blank</span>
                   </button>
-                  <div>
-                    <p class="text-[15px] text-on-surface font-medium leading-snug">{{ todo.title }}</p>
-                  </div>
+                  @if (editingTodoId() === todo.id) {
+                    <input
+                      type="text"
+                      [value]="todo.title"
+                      (keydown.enter)="saveTodoEdit(todo, $event)"
+                      (keydown.escape)="cancelTodoEdit()"
+                      (blur)="saveTodoEdit(todo, $event)"
+                      class="flex-1 text-[15px] text-on-surface font-medium bg-transparent focus:outline-none inline-edit"
+                      autofocus
+                    />
+                    <span class="flex items-center gap-2 text-[10px] font-label text-outline shrink-0">
+                      <span class="inline-flex items-center px-1.5 py-0.5 bg-surface-container-high rounded text-[10px] font-medium text-outline">&#8629; save</span>
+                      <span class="inline-flex items-center px-1.5 py-0.5 bg-surface-container-high rounded text-[10px] font-medium text-outline">esc</span>
+                    </span>
+                  } @else {
+                    <span class="flex-1 text-[15px] text-on-surface font-medium leading-snug cursor-text" (click)="startEditTodo(todo)">{{ todo.title }}</span>
+                    @if (todo.recurrenceRule || todo.templateId) {
+                      <span class="flex items-center gap-1 text-[10px] font-label font-semibold text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full shrink-0">
+                        <span class="material-symbols-outlined text-xs">repeat</span>
+                        {{ getRecurrenceLabel(todo.recurrenceRule) }}
+                      </span>
+                    }
+                    @if (todo.currentStreak && todo.currentStreak > 0) {
+                      <span class="text-xs font-label font-semibold text-primary shrink-0">{{ todo.currentStreak }}</span>
+                    }
+                  }
                 </div>
               }
             </div>
@@ -127,6 +203,8 @@ export class HomeComponent implements OnInit, OnChanges {
   private api = inject(ApiService);
 
   goalTodos = signal<GoalTodos[]>([]);
+  generalTodos = signal<TodoItem[]>([]);
+  editingTodoId = signal<string | null>(null);
 
   quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
 
@@ -140,13 +218,11 @@ export class HomeComponent implements OnInit, OnChanges {
   totalOpenTasks = signal(0);
 
   async ngOnInit() {
-    if (this.goals.length > 0) {
-      await this.loadAllTodos();
-    }
+    await this.loadAllTodos();
   }
 
   async ngOnChanges(changes: SimpleChanges) {
-    if (changes['goals'] && this.goals.length > 0) {
+    if (changes['goals']) {
       await this.loadAllTodos();
     }
   }
@@ -154,9 +230,17 @@ export class HomeComponent implements OnInit, OnChanges {
   async loadAllTodos() {
     const groups: GoalTodos[] = [];
     let total = 0;
+    const today = new Date().toISOString().split('T')[0];
 
+    // Load general (goalless) tasks
+    const general = await this.api.getGeneralTodoItems();
+    const openGeneral = general.filter(t => !t.isCompleted);
+    this.generalTodos.set(openGeneral);
+    total += openGeneral.length;
+
+    // Load goal tasks
     for (const goal of this.goals) {
-      const todos = await this.api.getTodoItems(goal.id);
+      const todos = await this.api.getTodoItems(goal.id, today);
       const openTodos = todos.filter(t => !t.isCompleted);
       if (openTodos.length > 0) {
         groups.push({ goal, todos: openTodos });
@@ -171,5 +255,49 @@ export class HomeComponent implements OnInit, OnChanges {
   async onToggleTodo(todo: TodoItem) {
     await this.api.updateTodoItem(todo.id, { isCompleted: true });
     await this.loadAllTodos();
+  }
+
+  startEditTodo(todo: TodoItem) {
+    this.editingTodoId.set(todo.id);
+  }
+
+  private editCancelled = false;
+
+  cancelTodoEdit() {
+    this.editCancelled = true;
+    this.editingTodoId.set(null);
+  }
+
+  async saveTodoEdit(todo: TodoItem, event: Event) {
+    if (this.editCancelled) {
+      this.editCancelled = false;
+      return;
+    }
+    const input = event.target as HTMLInputElement;
+    const newTitle = input.value.trim();
+    if (newTitle && newTitle !== todo.title) {
+      await this.api.updateTodoItem(todo.id, { title: newTitle });
+      await this.loadAllTodos();
+    }
+    this.editingTodoId.set(null);
+  }
+
+  getRecurrenceLabel(rule?: RecurrenceRule): string {
+    if (!rule) return '';
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    switch (rule.type) {
+      case 'daily':
+        return rule.interval === 1 ? 'Daily' : `Every ${rule.interval} days`;
+      case 'weekly':
+        if (rule.daysOfWeek?.length) {
+          if (JSON.stringify([...rule.daysOfWeek].sort()) === JSON.stringify([1,2,3,4,5])) return 'Weekdays';
+          return rule.daysOfWeek.map(d => dayNames[d]).join(' \u00b7 ');
+        }
+        return rule.interval === 1 ? 'Weekly' : `Every ${rule.interval} weeks`;
+      case 'monthly':
+        return rule.interval === 1 ? 'Monthly' : `Every ${rule.interval} months`;
+      default:
+        return rule.interval === 1 ? 'Daily' : `Every ${rule.interval} days`;
+    }
   }
 }

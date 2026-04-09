@@ -5,7 +5,7 @@ import { GoalViewComponent } from './components/goal-view/goal-view.component';
 import { GoalFormComponent } from './components/goal-form/goal-form.component';
 import { CommandPaletteComponent } from './components/command-palette/command-palette.component';
 import { HomeComponent } from './components/home/home.component';
-import { Goal } from './services/storage.service';
+import { Goal, RecurrenceRule } from './services/storage.service';
 import { ApiService } from './services/api.service';
 import { themeService } from './services/theme.service';
 
@@ -142,8 +142,8 @@ export class App {
     this.showCommandPalette.set(false);
   }
 
-  async onTaskAdded(event: { goalId: string; title: string }) {
-    await this.api.createTodoItem(event.goalId, event.title);
+  async onTaskAdded(event: { goalId: string | null; title: string; recurrenceRule?: RecurrenceRule }) {
+    await this.api.createTodoItem(event.goalId, event.title, event.recurrenceRule);
     // Refresh the active view's todo list
     if (this.goalViewRef) {
       await this.goalViewRef.loadTodoItems();

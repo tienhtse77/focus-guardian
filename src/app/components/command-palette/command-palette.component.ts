@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, signal, computed, ElementRef, ViewChild, AfterViewInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Goal } from '../../services/storage.service';
+import { Goal, RecurrenceRule } from '../../services/storage.service';
 
 type PaletteMode = 'default' | 'task' | 'goal';
 
@@ -94,6 +94,30 @@ interface PaletteAction {
             </div>
           }
 
+          <!-- Slash suggestions -->
+          @if (slashSuggestions().length > 0 && !detectedRecurrence()) {
+            <div class="py-1 mx-1">
+              @for (opt of slashSuggestions(); track opt.shorthand; let i = $index) {
+                <button
+                  (click)="selectSlashSuggestion(opt)"
+                  [class]="'w-full flex items-center gap-3 px-4 py-2 text-left transition-all duration-100 rounded-lg ' + (slashHighlight() === i ? 'bg-primary-container/40' : 'hover:bg-surface-container-low')"
+                >
+                  <span class="material-symbols-outlined text-lg" [class]="slashHighlight() === i ? 'text-primary' : 'text-on-surface-variant'">repeat</span>
+                  <span class="text-sm text-on-surface flex-1">{{ opt.label }}</span>
+                  <span class="text-xs font-label text-outline">{{ opt.desc }}</span>
+                </button>
+              }
+            </div>
+          }
+
+          <!-- Recurrence detection hint -->
+          @if (detectedRecurrence()) {
+            <div class="mx-5 mb-3 px-4 py-2.5 bg-primary-container/40 rounded-lg flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-lg">repeat</span>
+              <span class="text-sm text-primary font-label">Repeats <span class="font-bold">{{ detectedRecurrence() }}</span></span>
+            </div>
+          }
+
           <!-- TASK MODE: Context bar -->
           @if (mode() === 'task') {
             <div class="bg-surface-container-low px-5 py-2.5 flex items-center justify-between">
@@ -106,7 +130,8 @@ interface PaletteAction {
                     <span class="text-primary font-semibold">{{ todoCount() }}</span>
                   }
                 } @else {
-                  Select a goal first
+                  <span class="material-symbols-outlined text-sm">inbox</span>
+                  General task <span class="text-outline-variant">(no goal)</span>
                 }
               </span>
               <span class="text-[11px] font-label text-outline flex items-center gap-1.5">
@@ -156,7 +181,7 @@ export class CommandPaletteComponent implements AfterViewInit, OnChanges {
   @Input() todoStats: { completed: number; total: number } | null = null;
 
   @Output() closed = new EventEmitter<void>();
-  @Output() taskAdded = new EventEmitter<{ goalId: string; title: string }>();
+  @Output() taskAdded = new EventEmitter<{ goalId: string | null; title: string; recurrenceRule?: RecurrenceRule }>();
   @Output() goalJumped = new EventEmitter<string>();
   @Output() importRequested = new EventEmitter<void>();
 
@@ -205,6 +230,36 @@ export class CommandPaletteComponent implements AfterViewInit, OnChanges {
     return this.goals.filter(g => g.title.toLowerCase().includes(query));
   });
 
+  private readonly recurrenceOptions = [
+    { shorthand: '/daily', label: 'Daily', desc: 'Every day' },
+    { shorthand: '/weekdays', label: 'Weekdays', desc: 'Mon to Fri' },
+    { shorthand: '/weekly', label: 'Weekly', desc: 'On current day' },
+    { shorthand: '/weekly mon,wed,fri', label: 'Mon · Wed · Fri', desc: 'Custom weekly' },
+    { shorthand: '/every 2 days', label: 'Every 2 days', desc: 'Custom interval' },
+    { shorthand: '/every 3 days', label: 'Every 3 days', desc: 'Custom interval' },
+    { shorthand: '/monthly', label: 'Monthly', desc: 'On current date' },
+  ];
+
+  slashSuggestions = computed(() => {
+    if (this.mode() !== 'task') return [];
+    const val = this.inputValue();
+    const slashIdx = val.lastIndexOf('/');
+    if (slashIdx < 0) return [];
+    const after = val.substring(slashIdx).toLowerCase();
+    if (after === '/') return this.recurrenceOptions;
+    return this.recurrenceOptions.filter(o => o.shorthand.toLowerCase().startsWith(after));
+  });
+
+  slashHighlight = signal(0);
+
+  detectedRecurrence = computed(() => {
+    const val = this.inputValue();
+    if (this.mode() !== 'task') return null;
+    const { rule } = this.parseRecurrence(val);
+    if (!rule) return null;
+    return this.getRecurrenceLabel(rule);
+  });
+
   ngAfterViewInit() {
     this.focusInput();
   }
@@ -231,6 +286,7 @@ export class CommandPaletteComponent implements AfterViewInit, OnChanges {
     const value = (event.target as HTMLInputElement).value;
     this.inputValue.set(value);
     this.highlightIndex.set(0);
+    this.slashHighlight.set(0);
   }
 
   onKeyDown(event: KeyboardEvent) {
@@ -253,13 +309,29 @@ export class CommandPaletteComponent implements AfterViewInit, OnChanges {
 
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      const max = mode === 'default' ? this.filteredActions().length : this.filteredGoals().length;
-      this.highlightIndex.set(Math.min(this.highlightIndex() + 1, max - 1));
+      const suggestions = this.slashSuggestions();
+      if (mode === 'task' && suggestions.length > 0 && !this.detectedRecurrence()) {
+        this.slashHighlight.set(Math.min(this.slashHighlight() + 1, suggestions.length - 1));
+      } else {
+        const max = mode === 'default' ? this.filteredActions().length : this.filteredGoals().length;
+        this.highlightIndex.set(Math.min(this.highlightIndex() + 1, max - 1));
+      }
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
-      this.highlightIndex.set(Math.max(this.highlightIndex() - 1, 0));
+      const suggestions = this.slashSuggestions();
+      if (mode === 'task' && suggestions.length > 0 && !this.detectedRecurrence()) {
+        this.slashHighlight.set(Math.max(this.slashHighlight() - 1, 0));
+      } else {
+        this.highlightIndex.set(Math.max(this.highlightIndex() - 1, 0));
+      }
     } else if (event.key === 'Enter') {
       event.preventDefault();
+      // If slash suggestions are open, select the highlighted one
+      const suggestions = this.slashSuggestions();
+      if (mode === 'task' && suggestions.length > 0 && !this.detectedRecurrence()) {
+        this.selectSlashSuggestion(suggestions[this.slashHighlight()]);
+        return;
+      }
       if (mode === 'default') {
         const actions = this.filteredActions();
         if (actions.length > 0) {
@@ -286,12 +358,6 @@ export class CommandPaletteComponent implements AfterViewInit, OnChanges {
 
   onActionSelect(action: PaletteAction) {
     if (action.mode === 'task') {
-      if (!this.selectedGoalId) {
-        this.successMessage.set('Select a goal first to add tasks');
-        clearTimeout(this.successTimeout);
-        this.successTimeout = setTimeout(() => this.successMessage.set(''), 2000);
-        return;
-      }
       this.mode.set('task');
     } else if (action.mode === 'goal') {
       this.mode.set('goal');
@@ -310,15 +376,32 @@ export class CommandPaletteComponent implements AfterViewInit, OnChanges {
     this.closed.emit();
   }
 
-  private submitTask() {
-    const title = this.inputValue().trim();
-    if (!title || !this.selectedGoalId) return;
+  selectSlashSuggestion(opt: { shorthand: string; label: string }) {
+    const val = this.inputValue();
+    const slashIdx = val.lastIndexOf('/');
+    const before = slashIdx >= 0 ? val.substring(0, slashIdx) : val;
+    const newVal = before + opt.shorthand;
+    this.inputValue.set(newVal);
+    if (this.paletteInputRef?.nativeElement) {
+      this.paletteInputRef.nativeElement.value = newVal;
+      this.paletteInputRef.nativeElement.focus();
+    }
+    this.slashHighlight.set(0);
+  }
 
-    this.taskAdded.emit({ goalId: this.selectedGoalId, title });
+  private submitTask() {
+    const raw = this.inputValue().trim();
+    if (!raw) return;
+
+    const { title, rule } = this.parseRecurrence(raw);
+    if (!title) return;
+
+    this.taskAdded.emit({ goalId: this.selectedGoalId, title, recurrenceRule: rule });
     this.inputValue.set('');
 
     // Show success briefly
-    this.successMessage.set(`"${title}" added`);
+    const label = rule ? ` (${this.getRecurrenceLabel(rule)})` : '';
+    this.successMessage.set(`"${title}"${label} added`);
     clearTimeout(this.successTimeout);
     this.successTimeout = setTimeout(() => this.successMessage.set(''), 2000);
 
@@ -327,5 +410,50 @@ export class CommandPaletteComponent implements AfterViewInit, OnChanges {
       this.paletteInputRef.nativeElement.value = '';
     }
     this.focusInput();
+  }
+
+  private parseRecurrence(input: string): { title: string; rule?: RecurrenceRule } {
+    let match: RegExpMatchArray | null;
+
+    if ((match = input.match(/\s*\/daily\s*$/i))) {
+      return { title: input.replace(match[0], '').trim(), rule: { type: 'daily', interval: 1 } };
+    }
+    if ((match = input.match(/\s*\/weekdays\s*$/i))) {
+      return { title: input.replace(match[0], '').trim(), rule: { type: 'weekly', interval: 1, daysOfWeek: [1,2,3,4,5] } };
+    }
+    if ((match = input.match(/\s*\/weekly\s+([\w,]+)\s*$/i))) {
+      const dayMap: Record<string,number> = {sun:0,mon:1,tue:2,wed:3,thu:4,fri:5,sat:6};
+      const days = match[1].toLowerCase().split(',').map(d => dayMap[d.trim()]).filter(d => d !== undefined);
+      return { title: input.replace(match[0], '').trim(), rule: { type: 'weekly', interval: 1, daysOfWeek: days } };
+    }
+    if ((match = input.match(/\s*\/weekly\s*$/i))) {
+      return { title: input.replace(match[0], '').trim(), rule: { type: 'weekly', interval: 1, daysOfWeek: [new Date().getDay()] } };
+    }
+    if ((match = input.match(/\s*\/every\s+(\d+)\s+days?\s*$/i))) {
+      return { title: input.replace(match[0], '').trim(), rule: { type: 'daily', interval: parseInt(match[1]) } };
+    }
+    if ((match = input.match(/\s*\/monthly\s*$/i))) {
+      return { title: input.replace(match[0], '').trim(), rule: { type: 'monthly', interval: 1, dayOfMonth: new Date().getDate() } };
+    }
+
+    return { title: input };
+  }
+
+  getRecurrenceLabel(rule: RecurrenceRule): string {
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    switch (rule.type) {
+      case 'daily':
+        return rule.interval === 1 ? 'Daily' : `Every ${rule.interval} days`;
+      case 'weekly':
+        if (rule.daysOfWeek?.length) {
+          if (JSON.stringify([...rule.daysOfWeek].sort()) === JSON.stringify([1,2,3,4,5])) return 'Weekdays';
+          return rule.daysOfWeek.map(d => dayNames[d]).join(' \u00b7 ');
+        }
+        return rule.interval === 1 ? 'Weekly' : `Every ${rule.interval} weeks`;
+      case 'monthly':
+        return rule.interval === 1 ? 'Monthly' : `Every ${rule.interval} months`;
+      default:
+        return rule.interval === 1 ? 'Daily' : `Every ${rule.interval} days`;
+    }
   }
 }

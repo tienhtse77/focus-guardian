@@ -102,7 +102,7 @@
     --accent-hover: #43574c;
 }
 
-/* Dark theme */
+/* Dark theme — override both legacy vars and Tailwind @theme tokens */
 html.dark {
     --bg-primary: #0f1412;
     --bg-surface: #1a201e;
@@ -113,6 +113,34 @@ html.dark {
     --text-muted: #757c7b;
     --accent: #a8c4b5;
     --accent-hover: #c3dacc;
+
+    /* Tailwind @theme token overrides for dark mode */
+    --color-primary: #a8c4b5;
+    --color-primary-dim: #c3dacc;
+    --color-primary-container: #2a3d33;
+    --color-on-primary: #1a201e;
+    --color-on-primary-container: #a8c4b5;
+    --color-inverse-primary: #3a4d43;
+
+    --color-surface: #0f1412;
+    --color-surface-container-lowest: #1a201e;
+    --color-surface-container-low: #1a201e;
+    --color-surface-container: #222826;
+    --color-surface-container-high: #2a302e;
+    --color-background: #0f1412;
+    --color-on-surface: #e4e9e8;
+    --color-on-surface-variant: #adb3b2;
+
+    --color-tertiary: #d4c8b8;
+    --color-tertiary-container: #2e2820;
+    --color-on-tertiary-container: #d4c8b8;
+    --color-on-tertiary-fixed-variant: #d4c8b8;
+
+    --color-error: #fe8983;
+    --color-error-container: #4e0309;
+
+    --color-outline: #757c7b;
+    --color-outline-variant: #5a6060;
 }
 
 /* Base resets */
@@ -129,51 +157,7 @@ html, body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Dark mode overrides for Tailwind token classes */
-html.dark .bg-background,
-html.dark .bg-surface {
-    background-color: #0f1412 !important;
-}
-html.dark .bg-surface-container-lowest {
-    background-color: #1a201e !important;
-}
-html.dark .bg-surface-container-low {
-    background-color: #1a201e !important;
-}
-html.dark .bg-surface-container {
-    background-color: #222826 !important;
-}
-html.dark .bg-surface-container-high {
-    background-color: #2a302e !important;
-}
-html.dark .bg-tertiary-container {
-    background-color: #2e2820 !important;
-}
-html.dark .bg-primary-container {
-    background-color: #2a3d33 !important;
-}
-html.dark .bg-primary {
-    background-color: #3a4d43 !important;
-}
-html.dark .text-on-surface {
-    color: #e4e9e8 !important;
-}
-html.dark .text-on-surface-variant {
-    color: #adb3b2 !important;
-}
-html.dark .text-on-tertiary-container,
-html.dark .text-on-tertiary-fixed-variant {
-    color: #d4c8b8 !important;
-}
-html.dark .text-primary {
-    color: #a8c4b5 !important;
-}
-html.dark .text-outline {
-    color: #757c7b !important;
-}
-html.dark .text-outline-variant {
-    color: #5a6060 !important;
-}
+/* Dark mode shadow override */
 html.dark .editorial-shadow {
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
 }
@@ -227,6 +211,11 @@ input, select, textarea {
     background-color: var(--bg-surface-low);
     color: var(--text-primary);
     border: none;
+}
+/* Inline edit inputs/selects override */
+input.inline-edit, select.inline-edit {
+    background: transparent !important;
+    color: inherit !important;
 }
 input::placeholder, textarea::placeholder {
     color: var(--text-muted);

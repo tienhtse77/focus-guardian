@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Focus Guardian — Recurring Tasks + Inline Edit Mockup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .material-symbols-outlined.filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .editorial-shadow { box-shadow: 0 12px 32px rgba(45, 52, 51, 0.04); }
+    .state-tab { cursor: pointer; padding: 6px 14px; border-radius: 9999px; font-size: 11px; font-weight: 600; transition: all 0.2s; user-select: none; white-space: nowrap; }
+    .state-tab.active { background: #4E6358; color: #e6fdee; }
+    .state-tab:not(.active) { background: #ebeeed; color: #5a6060; }
+    .state-panel { display: none; }
+    .state-panel.active { display: block; }
+    * { transition-property: background-color, color, opacity, box-shadow, transform; transition-duration: 0.15s; }
+
+    html.dark { color-scheme: dark; }
+    html.dark body { background: #0f1412; color: #e4e9e8; }
+    html.dark .bg-surface-container-lowest { background: #1a201e !important; }
+    html.dark .bg-surface-container-low { background: #1a201e !important; }
+    html.dark .bg-surface-container { background: #222826 !important; }
+    html.dark .bg-primary-container { background: #2a3d33 !important; }
+    html.dark .bg-tertiary-container { background: #2e2820 !important; }
+    html.dark .text-on-surface { color: #e4e9e8 !important; }
+    html.dark .text-on-surface-variant { color: #adb3b2 !important; }
+    html.dark .text-primary { color: #a8c4b5 !important; }
+    html.dark .text-outline { color: #757c7b !important; }
+    html.dark .editorial-shadow { box-shadow: 0 12px 32px rgba(0,0,0,0.2); }
+    html.dark .state-tab:not(.active) { background: #222826; color: #adb3b2; }
+  </style>
+  <script>
+    tailwind.config = { darkMode: "class", theme: { extend: {
+      colors: {
+        primary: "#4e6358", "primary-dim": "#43574c", "primary-container": "#d1e8da",
+        "on-primary": "#e6fdee", "on-surface": "#2d3433", "on-surface-variant": "#5a6060",
+        surface: "#f9f9f8", "surface-container-low": "#f2f4f3", "surface-container": "#ebeeed",
+        "surface-container-lowest": "#ffffff", "surface-container-high": "#e4e9e8",
+        outline: "#757c7b", "outline-variant": "#adb3b2", background: "#f9f9f8",
+        tertiary: "#675e51", "tertiary-container": "#faecdc",
+        error: "#9f403d", "error-container": "#fe8983",
+      },
+      fontFamily: { headline: ["Manrope"], body: ["Manrope"], label: ["Inter"] },
+      borderRadius: { DEFAULT: "1rem", lg: "2rem" },
+    }}};
+  </script>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen">
+
+  <!-- Switcher -->
+  <div class="fixed top-0 left-0 right-0 z-[100] bg-surface-container-lowest/90 backdrop-blur-sm px-6 py-3 flex items-center gap-2 editorial-shadow">
+    <span class="text-xs font-label font-bold text-on-surface-variant uppercase tracking-widest mr-2">States</span>
+    <div class="state-tab active" data-state="tasks" onclick="switchState('tasks')">Task List</div>
+    <div class="state-tab" data-state="inline" onclick="switchState('inline')">Inline Edit</div>
+    <div class="state-tab" data-state="recurrence" onclick="switchState('recurrence')">Recurrence Picker</div>
+    <div class="state-tab" data-state="palette" onclick="switchState('palette')">Command Palette</div>
+    <div class="flex-1"></div>
+    <button onclick="document.documentElement.classList.toggle('dark')" class="text-on-surface-variant hover:text-primary p-2 rounded-full">
+      <span class="material-symbols-outlined text-xl">dark_mode</span>
+    </button>
+  </div>
+
+  <div class="max-w-2xl mx-auto pt-20 pb-16 px-8">
+
+    <!-- ===== STATE: Task List — with recurring badges and streaks ===== -->
+    <div id="state-tasks" class="state-panel active">
+      <h2 class="text-lg font-headline font-bold text-on-surface mb-6">Tasks with Recurrence & Streaks</h2>
+
+      <div class="space-y-1">
+        <!-- Recurring task with streak -->
+        <div class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-surface-container-low group transition-all">
+          <button class="shrink-0 text-on-surface-variant hover:text-primary">
+            <span class="material-symbols-outlined text-xl">check_box_outline_blank</span>
+          </button>
+          <span class="flex-1 text-sm text-on-surface cursor-text">Practice pronunciation for 15 mins</span>
+          <!-- Recurrence badge -->
+          <span class="flex items-center gap-1 text-[10px] font-label font-semibold text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full shrink-0 cursor-pointer hover:bg-surface-container-high transition-all">
+            <span class="material-symbols-outlined text-xs">repeat</span>
+            Daily
+          </span>
+          <!-- Streak -->
+          <span class="flex items-center gap-1 text-xs font-label font-bold text-amber-600 shrink-0" title="5-day streak">
+            🔥 5
+          </span>
+          <!-- Delete (hover) -->
+          <button class="shrink-0 opacity-0 group-hover:opacity-100 p-1 rounded-full text-on-surface-variant hover:text-error hover:bg-error-container/20 transition-all">
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
+
+        <!-- Recurring task — weekly -->
+        <div class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-surface-container-low group transition-all">
+          <button class="shrink-0 text-on-surface-variant hover:text-primary">
+            <span class="material-symbols-outlined text-xl">check_box_outline_blank</span>
+          </button>
+          <span class="flex-1 text-sm text-on-surface cursor-text">Watch 2 episodes of British TV show</span>
+          <span class="flex items-center gap-1 text-[10px] font-label font-semibold text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full shrink-0 cursor-pointer hover:bg-surface-container-high transition-all">
+            <span class="material-symbols-outlined text-xs">repeat</span>
+            Mon · Wed · Fri
+          </span>
+          <span class="flex items-center gap-1 text-xs font-label font-bold text-amber-600 shrink-0">
+            🔥 12
+          </span>
+          <button class="shrink-0 opacity-0 group-hover:opacity-100 p-1 rounded-full text-on-surface-variant hover:text-error hover:bg-error-container/20 transition-all">
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
+
+        <!-- One-time task (no recurrence, no streak) -->
+        <div class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-surface-container-low group transition-all">
+          <button class="shrink-0 text-on-surface-variant hover:text-primary">
+            <span class="material-symbols-outlined text-xl">check_box_outline_blank</span>
+          </button>
+          <span class="flex-1 text-sm text-on-surface cursor-text">Read one article from RSS feeds</span>
+          <button class="shrink-0 opacity-0 group-hover:opacity-100 p-1 rounded-full text-on-surface-variant hover:text-error hover:bg-error-container/20 transition-all">
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
+
+        <!-- Completed recurring task (today) -->
+        <div class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-surface-container-low group transition-all">
+          <button class="shrink-0 text-primary">
+            <span class="material-symbols-outlined text-xl filled text-primary">check_box</span>
+          </button>
+          <span class="flex-1 text-sm text-on-surface-variant line-through cursor-text">Complete Duolingo daily lesson</span>
+          <span class="flex items-center gap-1 text-[10px] font-label font-semibold text-on-surface-variant/50 bg-surface-container px-2 py-0.5 rounded-full shrink-0">
+            <span class="material-symbols-outlined text-xs">repeat</span>
+            Daily
+          </span>
+          <span class="flex items-center gap-1 text-xs font-label font-bold text-amber-600/60 shrink-0">
+            🔥 21
+          </span>
+          <button class="shrink-0 opacity-0 group-hover:opacity-100 p-1 rounded-full text-on-surface-variant hover:text-error hover:bg-error-container/20 transition-all">
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STATE: Inline Edit ===== -->
+    <div id="state-inline" class="state-panel">
+      <h2 class="text-lg font-headline font-bold text-on-surface mb-2">Inline Editing</h2>
+      <p class="text-sm text-on-surface-variant mb-6">Click on any task text to edit. Enter to save, Escape to cancel.</p>
+
+      <div class="space-y-1">
+        <!-- Normal task -->
+        <div class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-surface-container-low group transition-all">
+          <button class="shrink-0 text-on-surface-variant hover:text-primary">
+            <span class="material-symbols-outlined text-xl">check_box_outline_blank</span>
+          </button>
+          <span class="flex-1 text-sm text-on-surface cursor-text">Practice pronunciation for 15 mins</span>
+          <span class="flex items-center gap-1 text-[10px] font-label font-semibold text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full shrink-0">
+            <span class="material-symbols-outlined text-xs">repeat</span>
+            Daily
+          </span>
+        </div>
+
+        <!-- EDITING STATE — this task is being edited -->
+        <div class="flex items-center gap-3 px-3 py-3 rounded-lg bg-surface-container-low ring-2 ring-primary/20 transition-all">
+          <button class="shrink-0 text-on-surface-variant">
+            <span class="material-symbols-outlined text-xl">check_box_outline_blank</span>
+          </button>
+          <input
+            type="text"
+            value="Watch 2 episodes of British TV show"
+            class="flex-1 text-sm text-on-surface bg-transparent focus:outline-none font-body"
+            autofocus
+          />
+          <div class="flex items-center gap-1 shrink-0">
+            <span class="text-[10px] font-label text-outline" style="display:inline-flex;align-items:center;padding:1px 5px;background:#f2f4f3;border-radius:4px;font-weight:500;">↵ save</span>
+            <span class="text-[10px] font-label text-outline" style="display:inline-flex;align-items:center;padding:1px 5px;background:#f2f4f3;border-radius:4px;font-weight:500;">esc</span>
+          </div>
+        </div>
+
+        <!-- Normal task -->
+        <div class="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-surface-container-low group transition-all">
+          <button class="shrink-0 text-on-surface-variant hover:text-primary">
+            <span class="material-symbols-outlined text-xl">check_box_outline_blank</span>
+          </button>
+          <span class="flex-1 text-sm text-on-surface cursor-text">Read one article from RSS feeds</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STATE: Recurrence Picker ===== -->
+    <div id="state-recurrence" class="state-panel">
+      <h2 class="text-lg font-headline font-bold text-on-surface mb-2">Recurrence Picker</h2>
+      <p class="text-sm text-on-surface-variant mb-6">Click the recurrence badge to open the picker dropdown.</p>
+
+      <div class="space-y-1">
+        <!-- Task with dropdown open -->
+        <div class="flex items-center gap-3 px-3 py-3 rounded-lg bg-surface-container-low transition-all relative">
+          <button class="shrink-0 text-on-surface-variant">
+            <span class="material-symbols-outlined text-xl">check_box_outline_blank</span>
+          </button>
+          <span class="flex-1 text-sm text-on-surface">Practice pronunciation for 15 mins</span>
+          <span class="flex items-center gap-1 text-[10px] font-label font-semibold text-primary bg-primary-container px-2 py-0.5 rounded-full shrink-0">
+            <span class="material-symbols-outlined text-xs">repeat</span>
+            Daily
+          </span>
+        </div>
+
+        <!-- Dropdown popover -->
+        <div class="ml-10 w-72 bg-surface-container-lowest rounded-xl editorial-shadow overflow-hidden" style="box-shadow: 0 16px 48px rgba(45,52,51,0.12);">
+          <!-- Presets -->
+          <div class="py-2">
+            <button class="w-full px-4 py-2.5 text-left text-sm text-on-surface hover:bg-surface-container-low flex items-center gap-3 transition-all">
+              <span class="material-symbols-outlined text-lg text-on-surface-variant">block</span>
+              Does not repeat
+            </button>
+            <button class="w-full px-4 py-2.5 text-left text-sm text-primary font-semibold bg-primary-container/30 flex items-center gap-3">
+              <span class="material-symbols-outlined text-lg text-primary">repeat</span>
+              Daily
+              <span class="material-symbols-outlined text-sm text-primary ml-auto">check</span>
+            </button>
+            <button class="w-full px-4 py-2.5 text-left text-sm text-on-surface hover:bg-surface-container-low flex items-center gap-3 transition-all">
+              <span class="material-symbols-outlined text-lg text-on-surface-variant">repeat</span>
+              Weekly on Tuesday
+            </button>
+            <button class="w-full px-4 py-2.5 text-left text-sm text-on-surface hover:bg-surface-container-low flex items-center gap-3 transition-all">
+              <span class="material-symbols-outlined text-lg text-on-surface-variant">repeat</span>
+              Mon to Fri
+            </button>
+            <button class="w-full px-4 py-2.5 text-left text-sm text-on-surface hover:bg-surface-container-low flex items-center gap-3 transition-all">
+              <span class="material-symbols-outlined text-lg text-on-surface-variant">repeat</span>
+              Monthly on the 8th
+            </button>
+          </div>
+          <!-- Divider -->
+          <div class="h-px bg-surface-container mx-3"></div>
+          <!-- Custom -->
+          <div class="py-2">
+            <button class="w-full px-4 py-2.5 text-left text-sm text-on-surface hover:bg-surface-container-low flex items-center gap-3 transition-all">
+              <span class="material-symbols-outlined text-lg text-on-surface-variant">tune</span>
+              Custom...
+            </button>
+          </div>
+        </div>
+
+        <!-- Custom recurrence expanded -->
+        <div class="ml-10 mt-4">
+          <h3 class="text-xs font-label font-bold uppercase tracking-[0.2em] text-outline mb-4">Custom Recurrence</h3>
+          <div class="bg-surface-container-lowest rounded-xl p-5 editorial-shadow space-y-5" style="box-shadow: 0 16px 48px rgba(45,52,51,0.12);">
+            <!-- Repeat every N -->
+            <div class="flex items-center gap-3">
+              <span class="text-sm text-on-surface font-medium shrink-0">Repeat every</span>
+              <input type="number" value="2" min="1" class="w-16 px-3 py-2 bg-surface-container-low rounded-lg text-sm text-center text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30" />
+              <select class="px-3 py-2 bg-surface-container-low rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30">
+                <option>day</option>
+                <option selected>week</option>
+                <option>month</option>
+              </select>
+            </div>
+
+            <!-- Day of week selector (for weekly) -->
+            <div>
+              <span class="text-xs font-label text-on-surface-variant font-semibold block mb-2">On these days</span>
+              <div class="flex gap-1.5">
+                <button class="w-9 h-9 rounded-full text-xs font-label font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all">S</button>
+                <button class="w-9 h-9 rounded-full text-xs font-label font-semibold bg-primary text-on-primary">M</button>
+                <button class="w-9 h-9 rounded-full text-xs font-label font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all">T</button>
+                <button class="w-9 h-9 rounded-full text-xs font-label font-semibold bg-primary text-on-primary">W</button>
+                <button class="w-9 h-9 rounded-full text-xs font-label font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all">T</button>
+                <button class="w-9 h-9 rounded-full text-xs font-label font-semibold bg-primary text-on-primary">F</button>
+                <button class="w-9 h-9 rounded-full text-xs font-label font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all">S</button>
+              </div>
+            </div>
+
+            <!-- End date (optional) -->
+            <div class="flex items-center gap-3">
+              <span class="text-sm text-on-surface font-medium shrink-0">Ends</span>
+              <select class="px-3 py-2 bg-surface-container-low rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30">
+                <option selected>Never</option>
+                <option>On date</option>
+              </select>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-end gap-2 pt-2">
+              <button class="px-4 py-2 text-sm text-on-surface-variant hover:text-on-surface rounded-lg hover:bg-surface-container-low font-semibold transition-all">Cancel</button>
+              <button class="px-4 py-2 text-sm text-on-primary bg-primary rounded-lg font-semibold hover:bg-primary-dim transition-all">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STATE: Command Palette — /daily syntax ===== -->
+    <div id="state-palette" class="state-panel">
+      <h2 class="text-lg font-headline font-bold text-on-surface mb-2">Command Palette — Recurrence Syntax</h2>
+      <p class="text-sm text-on-surface-variant mb-6">Add <code class="text-xs bg-surface-container px-1.5 py-0.5 rounded">/daily</code>, <code class="text-xs bg-surface-container px-1.5 py-0.5 rounded">/weekly mon,wed,fri</code>, etc. when adding a task.</p>
+
+      <!-- Simulated palette -->
+      <div class="w-full max-w-lg bg-surface-container-lowest rounded-lg editorial-shadow overflow-hidden" style="box-shadow: 0 24px 64px rgba(45,52,51,0.12);">
+        <!-- Input with task prefix -->
+        <div class="flex items-center gap-3 px-5 py-4">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary-container rounded-full text-primary text-xs font-label font-semibold shrink-0">
+            <span class="material-symbols-outlined text-sm">add_task</span>
+            Task
+          </span>
+          <span class="flex-1 text-base font-body text-on-surface">Do 20 pushups <span class="text-primary font-semibold">/daily</span></span>
+          <span style="display:inline-flex;align-items:center;padding:1px 5px;background:#f2f4f3;border-radius:4px;font-size:11px;font-weight:500;color:#757c7b;">esc</span>
+        </div>
+        <!-- Detected recurrence hint -->
+        <div class="mx-5 mb-3 px-4 py-2.5 bg-primary-container/40 rounded-lg flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary text-lg">repeat</span>
+          <span class="text-sm text-primary font-label">Repeats <span class="font-bold">daily</span></span>
+        </div>
+        <!-- Context bar -->
+        <div class="bg-surface-container-low px-5 py-2.5 flex items-center justify-between">
+          <span class="text-[11px] font-label text-outline flex items-center gap-2">
+            <span class="text-base">🌍</span>
+            Adding to <span class="font-semibold text-on-surface-variant">Learn English</span>
+          </span>
+          <span class="text-[11px] font-label text-outline">↵ add · esc back</span>
+        </div>
+      </div>
+
+      <!-- Syntax reference -->
+      <div class="mt-8 bg-surface-container-low rounded-xl p-5 space-y-2">
+        <h3 class="text-xs font-label font-bold uppercase tracking-[0.2em] text-outline mb-3">Supported Syntax</h3>
+        <div class="grid grid-cols-2 gap-2 text-sm">
+          <div><code class="text-xs bg-surface-container px-1.5 py-0.5 rounded text-primary font-semibold">/daily</code></div>
+          <div class="text-on-surface-variant">Every day</div>
+          <div><code class="text-xs bg-surface-container px-1.5 py-0.5 rounded text-primary font-semibold">/weekdays</code></div>
+          <div class="text-on-surface-variant">Monday to Friday</div>
+          <div><code class="text-xs bg-surface-container px-1.5 py-0.5 rounded text-primary font-semibold">/weekly</code></div>
+          <div class="text-on-surface-variant">Weekly on current day</div>
+          <div><code class="text-xs bg-surface-container px-1.5 py-0.5 rounded text-primary font-semibold">/weekly mon,wed,fri</code></div>
+          <div class="text-on-surface-variant">Specific days of week</div>
+          <div><code class="text-xs bg-surface-container px-1.5 py-0.5 rounded text-primary font-semibold">/every 3 days</code></div>
+          <div class="text-on-surface-variant">Every N days</div>
+          <div><code class="text-xs bg-surface-container px-1.5 py-0.5 rounded text-primary font-semibold">/monthly</code></div>
+          <div class="text-on-surface-variant">Monthly on current date</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function switchState(id) {
+      document.querySelectorAll('.state-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.state-panel').forEach(p => p.classList.remove('active'));
+      document.querySelector(`[data-state="${id}"]`).classList.add('active');
+      document.getElementById(`state-${id}`).classList.add('active');
+    }
+  </script>
+</body>
+</html>
