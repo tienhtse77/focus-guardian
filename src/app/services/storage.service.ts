@@ -44,12 +44,24 @@ export interface TodoItem {
     isCompleted: boolean;
     createdAt: number; // epoch ms
     completedAt?: number; // epoch ms
-    recurrenceRule?: RecurrenceRule;
-    isRecurringTemplate?: boolean;
+    // If this task was spawned from a recurrence template, this points to it.
+    // Templates and their spawned tasks are otherwise independent — editing/completing/
+    // deleting this task never touches the template.
     templateId?: string;
-    dueDate?: string;  // ISO date
-    currentStreak?: number;
-    longestStreak?: number;
+    // The date this task represents (only set for template-spawned tasks).
+    dueDate?: string;  // ISO date (yyyy-MM-dd)
+}
+
+export interface RecurrenceTemplate {
+    id: string;
+    goalId?: string;
+    title: string;
+    rule: RecurrenceRule;
+    isActive: boolean;
+    createdAt: number; // epoch ms
+    // Derived on the server from task completion history.
+    currentStreak: number;
+    longestStreak: number;
 }
 
 export type PageStatus = 'unread' | 'viewed' | 'favorite' | 'watch-later';
