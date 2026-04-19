@@ -1,12 +1,14 @@
 import { Component, Input, Output, EventEmitter, signal, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Goal, Content, SavedPage, PageStatus, TodoItem, RecurrenceRule } from '../../services/storage.service';
+import { Goal, Content, SavedPage, PageStatus, TodoItem, RecurrenceRule, RecurrenceTemplate } from '../../services/storage.service';
 import { ContentAggregatorService } from '../../services/content-aggregator.service';
 import { ApiService } from '../../services/api.service';
 import { ContentCardComponent } from '../content-card/content-card.component';
 import { SavedPageCardComponent } from '../saved-page-card/saved-page-card.component';
 import { ImportFeedsComponent } from '../import-feeds/import-feeds.component';
+
+type TemplateRuleKind = 'daily' | 'weekdays' | 'weekly' | 'monthly';
 
 @Component({
   selector: 'app-goal-view',
@@ -47,7 +49,7 @@ import { ImportFeedsComponent } from '../import-feeds/import-feeds.component';
             </div>
           </section>
 
-          <!-- Tasks Section -->
+          <!-- Tasks Section (today's tasks — templates render below in their own section) -->
           @if (todoItems().length > 0) {
             <section class="space-y-4">
               <div class="flex items-center gap-3">
@@ -83,91 +85,12 @@ import { ImportFeedsComponent } from '../import-feeds/import-feeds.component';
                       <span class="flex-1 text-sm cursor-text" [class]="todo.isCompleted ? 'text-on-surface-variant line-through' : 'text-on-surface'" (click)="startEditTodo(todo)">
                         {{ todo.title }}
                       </span>
-                      <!-- Recurrence badge (clickable) -->
-                      <div class="relative shrink-0">
-                        @if (todo.recurrenceRule) {
-                          <button (click)="toggleRecurrencePicker(todo, $event)"
-                            [class]="'flex items-center gap-1 text-[10px] font-label font-semibold px-2 py-0.5 rounded-full transition-all duration-200 ' + (recurrencePickerId() === todo.id ? 'text-primary bg-primary-container' : 'text-on-surface-variant bg-surface-container hover:bg-surface-container-high')">
-                            <span class="material-symbols-outlined" style="font-size: 14px;">repeat</span>
-                            {{ getRecurrenceLabel(todo.recurrenceRule) }}
-                          </button>
-                        } @else if (!todo.isCompleted) {
-                          <button (click)="toggleRecurrencePicker(todo, $event)"
-                            [class]="'flex items-center gap-1 text-[10px] font-label px-2 py-0.5 rounded-full hover:bg-surface-container transition-all duration-200 ' + (recurrencePickerId() === todo.id ? 'text-primary opacity-100' : 'text-outline opacity-0 group-hover:opacity-100')">
-                            <span class="material-symbols-outlined" style="font-size: 14px;">repeat</span>
-                            <span>Set repeat</span>
-                          </button>
-                        }
-
-                        <!-- Recurrence dropdown -->
-                        @if (recurrencePickerId() === todo.id) {
-                          <div class="absolute right-0 top-7 z-30 w-72 bg-surface-container-lowest rounded-xl overflow-hidden" style="box-shadow: 0 16px 48px rgba(45,52,51,0.12);">
-                            <!-- Quick presets -->
-                            <div class="py-2">
-                              <button (click)="setRecurrence(todo, null)" class="w-full px-4 py-2 text-left text-sm text-on-surface hover:bg-surface-container-low flex items-center gap-3 transition-all duration-200">
-                                <span class="material-symbols-outlined text-lg text-on-surface-variant">block</span>
-                                <span class="flex-1">Does not repeat</span>
-                                @if (!todo.recurrenceRule) { <span class="material-symbols-outlined text-sm text-primary">check</span> }
-                              </button>
-                              <button (click)="setRecurrence(todo, { type: 'daily', interval: 1 })"
-                                [class]="'w-full px-4 py-2 text-left text-sm flex items-center gap-3 transition-all duration-200 ' + (todo.recurrenceRule?.type === 'daily' ? 'text-primary font-semibold bg-primary-container/30' : 'text-on-surface hover:bg-surface-container-low')">
-                                <span class="material-symbols-outlined text-lg" [class]="todo.recurrenceRule?.type === 'daily' ? 'text-primary' : 'text-on-surface-variant'">repeat</span>
-                                <span class="flex-1">Daily</span>
-                                @if (todo.recurrenceRule?.type === 'daily') { <span class="material-symbols-outlined text-sm text-primary">check</span> }
-                              </button>
-                              <button (click)="setRecurrence(todo, { type: 'monthly', interval: 1, dayOfMonth: todayDate() })" class="w-full px-4 py-2 text-left text-sm text-on-surface hover:bg-surface-container-low flex items-center gap-3 transition-all duration-200">
-                                <span class="material-symbols-outlined text-lg text-on-surface-variant">repeat</span>
-                                <span class="flex-1">Monthly on the {{ todayDate() }}{{ ordinalSuffix(todayDate()) }}</span>
-                              </button>
-                            </div>
-
-                            <!-- Day of week selector — always visible -->
-                            <div class="px-4 py-3 bg-surface-container-low/50">
-                              <span class="text-xs font-label text-on-surface-variant font-semibold block mb-2.5">Weekly on</span>
-                              <div class="flex gap-1.5 justify-between">
-                                @for (day of dayLabels; track $index) {
-                                  <button (click)="toggleWeekDay(todo, $index)"
-                                    [class]="'w-9 h-9 rounded-full text-xs font-label font-semibold transition-all duration-200 ' + (isDaySelected(todo, $index) ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high')">
-                                    {{ day }}
-                                  </button>
-                                }
-                              </div>
-                            </div>
-
-                            <!-- Custom interval -->
-                            @if (!showCustomRecurrence()) {
-                              <div class="py-2">
-                                <button (click)="openCustomRecurrence(todo)" class="w-full px-4 py-2 text-left text-sm text-on-surface hover:bg-surface-container-low flex items-center gap-3 transition-all duration-200">
-                                  <span class="material-symbols-outlined text-lg text-on-surface-variant">tune</span>
-                                  <span class="flex-1">Every N days/weeks...</span>
-                                </button>
-                              </div>
-                            } @else {
-                              <div class="px-4 py-3 space-y-3">
-                                <div class="flex items-center gap-3">
-                                  <span class="text-sm text-on-surface font-medium shrink-0">Every</span>
-                                  <input type="number" [(ngModel)]="customInterval" min="1"
-                                    class="inline-edit w-14 px-2 py-1.5 rounded-lg text-sm text-center text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
-                                    style="background: var(--color-surface-container-low);" />
-                                  <select [(ngModel)]="customType"
-                                    class="inline-edit px-2 py-1.5 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
-                                    style="background: var(--color-surface-container-low);">
-                                    <option value="day">days</option>
-                                    <option value="week">weeks</option>
-                                    <option value="month">months</option>
-                                  </select>
-                                </div>
-                                <div class="flex justify-end gap-2">
-                                  <button (click)="showCustomRecurrence.set(false)" class="px-3 py-1.5 text-sm text-on-surface-variant hover:text-on-surface rounded-lg hover:bg-surface-container-low font-semibold transition-all duration-200">Cancel</button>
-                                  <button (click)="saveCustomRecurrence(todo)" class="px-3 py-1.5 text-sm text-on-primary bg-primary rounded-lg font-semibold hover:bg-primary-dim transition-all duration-200">Save</button>
-                                </div>
-                              </div>
-                            }
-                          </div>
-                        }
-                      </div>
-                      @if (todo.currentStreak && todo.currentStreak > 0) {
-                        <span class="flex items-center gap-0.5 text-xs font-label font-bold shrink-0" style="color: #d97706;">🔥 {{ todo.currentStreak }}</span>
+                      <!-- Template-origin indicator (read-only badge) -->
+                      @if (todo.templateId) {
+                        <span class="flex items-center gap-1 text-[10px] font-label font-semibold px-2 py-0.5 rounded-full text-on-surface-variant bg-surface-container shrink-0">
+                          <span class="material-symbols-outlined" style="font-size: 14px;">repeat</span>
+                          From template
+                        </span>
                       }
                     }
                     <button (click)="deleteTodo(todo)" class="shrink-0 opacity-0 group-hover:opacity-100 p-1 rounded-full text-on-surface-variant hover:text-error hover:bg-error-container/20 transition-all duration-200">
@@ -184,6 +107,93 @@ import { ImportFeedsComponent } from '../import-feeds/import-feeds.component';
               }
             </section>
           }
+
+          <!-- Recurrence Templates Section -->
+          <section class="space-y-4">
+            <div class="flex items-center gap-3">
+              <span class="material-symbols-outlined text-primary text-lg">repeat</span>
+              <h3 class="text-lg font-headline font-bold text-on-surface tracking-tight">Recurring</h3>
+              <span class="text-xs font-label font-bold text-primary bg-primary-container px-2 py-1 rounded">{{ activeTemplateCount }} ACTIVE</span>
+              <div class="flex-1"></div>
+              @if (!showTemplateForm()) {
+                <button (click)="startNewTemplate()" class="flex items-center gap-1.5 text-xs font-label font-semibold text-primary hover:text-primary-dim px-3 py-1.5 rounded-lg hover:bg-primary-container/30 transition-all duration-200">
+                  <span class="material-symbols-outlined text-sm">add</span>
+                  New
+                </button>
+              }
+            </div>
+
+            <!-- New-template inline form -->
+            @if (showTemplateForm()) {
+              <div class="bg-surface-container-low p-4 rounded-xl space-y-3">
+                <input
+                  type="text"
+                  [(ngModel)]="newTemplateTitle"
+                  (keydown.enter)="saveNewTemplate()"
+                  (keydown.escape)="cancelNewTemplate()"
+                  placeholder="What should repeat? (e.g. Learn 5 vocabs)"
+                  class="inline-edit w-full px-3 py-2 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  style="background: var(--color-surface-container-lowest);"
+                  autofocus
+                />
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs font-label text-on-surface-variant font-semibold">Repeats</span>
+                  @for (choice of ruleChoices; track choice.kind) {
+                    <button
+                      (click)="newTemplateRuleKind = choice.kind"
+                      [class]="'text-xs font-label font-semibold px-3 py-1.5 rounded-full transition-all duration-200 ' + (newTemplateRuleKind === choice.kind ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high')">
+                      {{ choice.label }}
+                    </button>
+                  }
+                </div>
+                @if (newTemplateRuleKind === 'weekly') {
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-xs font-label text-on-surface-variant font-semibold mr-1">On</span>
+                    @for (day of dayLabels; track $index) {
+                      <button (click)="toggleNewTemplateDay($index)"
+                        [class]="'w-8 h-8 rounded-full text-xs font-label font-semibold transition-all duration-200 ' + (newTemplateDays[$index] ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high')">
+                        {{ day }}
+                      </button>
+                    }
+                  </div>
+                }
+                <div class="flex justify-end gap-2">
+                  <button (click)="cancelNewTemplate()" class="px-3 py-1.5 text-sm text-on-surface-variant hover:text-on-surface rounded-lg hover:bg-surface-container font-semibold transition-all duration-200">Cancel</button>
+                  <button (click)="saveNewTemplate()" [disabled]="!newTemplateTitle.trim()" class="px-4 py-1.5 text-sm text-on-primary bg-primary rounded-lg font-semibold hover:bg-primary-dim disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200">Save</button>
+                </div>
+              </div>
+            }
+
+            <!-- Template list -->
+            @if (templates().length > 0) {
+              <div class="space-y-1">
+                @for (t of templates(); track t.id) {
+                  <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-container group transition-all duration-200"
+                    [class.opacity-60]="!t.isActive">
+                    <button (click)="toggleTemplateActive(t)" class="shrink-0 text-on-surface-variant hover:text-primary transition-all duration-200" [title]="t.isActive ? 'Pause this template' : 'Resume this template'">
+                      <span class="material-symbols-outlined text-xl" [class.filled]="t.isActive" [class.text-primary]="t.isActive">
+                        {{ t.isActive ? 'toggle_on' : 'toggle_off' }}
+                      </span>
+                    </button>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm text-on-surface truncate">{{ t.title }}</p>
+                      <p class="text-[10px] font-label text-outline uppercase tracking-wider">{{ ruleLabel(t.rule) }}</p>
+                    </div>
+                    @if (t.currentStreak > 0) {
+                      <span class="flex items-center gap-0.5 text-xs font-label font-bold shrink-0" style="color: #d97706;">🔥 {{ t.currentStreak }}</span>
+                    }
+                    <button (click)="deleteTemplate(t)" class="shrink-0 opacity-0 group-hover:opacity-100 p-1 rounded-full text-on-surface-variant hover:text-error hover:bg-error-container/20 transition-all duration-200" title="Delete template (existing tasks stay)">
+                      <span class="material-symbols-outlined text-lg">close</span>
+                    </button>
+                  </div>
+                }
+              </div>
+            } @else if (!showTemplateForm()) {
+              <div class="text-center py-6 text-xs font-label text-outline">
+                No recurring templates yet. Click "New" to define one.
+              </div>
+            }
+          </section>
 
           <!-- Saved Pages Section -->
           @if (savedPages().length > 0) {
@@ -345,20 +355,30 @@ export class GoalViewComponent implements OnInit, OnChanges {
   content = signal<Content[]>([]);
   savedPages = signal<SavedPage[]>([]);
   todoItems = signal<TodoItem[]>([]);
+  templates = signal<RecurrenceTemplate[]>([]);
   isLoading = signal(false);
   showImportModal = signal(false);
   importMessage = signal<string>('');
   editingTodoId = signal<string | null>(null);
-  recurrencePickerId = signal<string | null>(null);
-  showCustomRecurrence = signal(false);
-  customInterval = 1;
-  customType: 'day' | 'week' | 'month' = 'week';
-  customDays: boolean[] = [false, false, false, false, false, false, false]; // Sun-Sat
+
+  // --- Template form state ---
+  showTemplateForm = signal(false);
+  newTemplateTitle = '';
+  newTemplateRuleKind: TemplateRuleKind = 'daily';
+  newTemplateDays: boolean[] = [false, true, false, false, false, false, false]; // default Mon
+  readonly dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  readonly ruleChoices: { kind: TemplateRuleKind; label: string }[] = [
+    { kind: 'daily', label: 'Daily' },
+    { kind: 'weekdays', label: 'Weekdays' },
+    { kind: 'weekly', label: 'Weekly' },
+    { kind: 'monthly', label: 'Monthly' },
+  ];
 
   async ngOnInit() {
     await this.loadContent();
     await this.loadSavedPages();
     await this.loadTodoItems();
+    await this.loadTemplates();
   }
 
   async ngOnChanges(changes: SimpleChanges) {
@@ -366,6 +386,7 @@ export class GoalViewComponent implements OnInit, OnChanges {
       await this.loadContent();
       await this.loadSavedPages();
       await this.loadTodoItems();
+      await this.loadTemplates();
     }
   }
 
@@ -387,23 +408,38 @@ export class GoalViewComponent implements OnInit, OnChanges {
   async loadTodoItems() {
     const today = new Date().toISOString().split('T')[0];
     const items = await this.api.getTodoItems(this.goal.id, today);
-    // Filter out templates — only show one-time tasks and instances
-    const visible = items.filter(t => !t.isRecurringTemplate);
-    visible.sort((a, b) => {
+    items.sort((a, b) => {
       if (a.isCompleted !== b.isCompleted) return a.isCompleted ? 1 : -1;
       return a.createdAt - b.createdAt;
     });
-    this.todoItems.set(visible);
+    this.todoItems.set(items);
+  }
+
+  async loadTemplates() {
+    const all = await this.api.getRecurrenceTemplates(this.goal.id);
+    // Active first, then inactive. Within each, by createdAt ascending.
+    all.sort((a, b) => {
+      if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
+      return a.createdAt - b.createdAt;
+    });
+    this.templates.set(all);
+  }
+
+  get activeTemplateCount(): number {
+    return this.templates().filter(t => t.isActive).length;
   }
 
   async toggleTodo(item: TodoItem) {
     await this.api.updateTodoItem(item.id, { isCompleted: !item.isCompleted });
     await this.loadTodoItems();
+    // Streak is derived from task completions, so template list may now show updated streaks.
+    await this.loadTemplates();
   }
 
   async deleteTodo(item: TodoItem) {
     await this.api.deleteTodoItem(item.id);
     await this.loadTodoItems();
+    await this.loadTemplates();
   }
 
   get completedTodoCount(): number {
@@ -435,101 +471,95 @@ export class GoalViewComponent implements OnInit, OnChanges {
     this.editingTodoId.set(null);
   }
 
-  getRecurrenceLabel(rule?: RecurrenceRule): string {
-    if (!rule) return '';
-    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  // --- Templates ---
+
+  startNewTemplate() {
+    this.newTemplateTitle = '';
+    this.newTemplateRuleKind = 'daily';
+    this.newTemplateDays = [false, false, false, false, false, false, false];
+    this.newTemplateDays[new Date().getDay()] = true;
+    this.showTemplateForm.set(true);
+  }
+
+  cancelNewTemplate() {
+    this.showTemplateForm.set(false);
+  }
+
+  toggleNewTemplateDay(index: number) {
+    this.newTemplateDays[index] = !this.newTemplateDays[index];
+  }
+
+  async saveNewTemplate() {
+    const title = this.newTemplateTitle.trim();
+    if (!title) return;
+    const rule = this.buildNewTemplateRule();
+    await this.api.createRecurrenceTemplate(this.goal.id, title, rule);
+    this.showTemplateForm.set(false);
+    await this.loadTemplates();
+    await this.loadTodoItems(); // A task may have been spawned for today.
+  }
+
+  private buildNewTemplateRule(): RecurrenceRule {
+    switch (this.newTemplateRuleKind) {
+      case 'daily':
+        return { type: 'daily', interval: 1 };
+      case 'weekdays':
+        return { type: 'weekly', interval: 1, daysOfWeek: [1, 2, 3, 4, 5] };
+      case 'weekly': {
+        const days = this.newTemplateDays
+          .map((v, i) => (v ? i : -1))
+          .filter(i => i >= 0);
+        return {
+          type: 'weekly',
+          interval: 1,
+          daysOfWeek: days.length > 0 ? days : [new Date().getDay()],
+        };
+      }
+      case 'monthly':
+        return { type: 'monthly', interval: 1, dayOfMonth: new Date().getDate() };
+    }
+  }
+
+  async toggleTemplateActive(t: RecurrenceTemplate) {
+    await this.api.updateRecurrenceTemplate(t.id, { isActive: !t.isActive });
+    await this.loadTemplates();
+  }
+
+  async deleteTemplate(t: RecurrenceTemplate) {
+    if (!confirm(`Delete "${t.title}"? Tasks already spawned from it will stay.`)) return;
+    await this.api.deleteRecurrenceTemplate(t.id);
+    await this.loadTemplates();
+  }
+
+  ruleLabel(rule: RecurrenceRule): string {
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     switch (rule.type) {
       case 'daily':
         return rule.interval === 1 ? 'Daily' : `Every ${rule.interval} days`;
       case 'weekly':
         if (rule.daysOfWeek?.length) {
-          if (JSON.stringify([...rule.daysOfWeek].sort()) === JSON.stringify([1,2,3,4,5])) return 'Weekdays';
+          if (JSON.stringify([...rule.daysOfWeek].sort()) === JSON.stringify([1, 2, 3, 4, 5])) return 'Weekdays';
           return rule.daysOfWeek.map(d => dayNames[d]).join(' \u00b7 ');
         }
         return rule.interval === 1 ? 'Weekly' : `Every ${rule.interval} weeks`;
       case 'monthly':
-        return rule.interval === 1 ? 'Monthly' : `Every ${rule.interval} months`;
+        return `Monthly on the ${rule.dayOfMonth ?? new Date().getDate()}${this.ordinalSuffix(rule.dayOfMonth ?? new Date().getDate())}`;
       default:
-        return rule.interval === 1 ? 'Daily' : `Every ${rule.interval} days`;
+        return 'Custom';
     }
   }
 
-  // --- Recurrence picker ---
-  dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-
-  toggleRecurrencePicker(todo: TodoItem, event: Event) {
-    event.stopPropagation();
-    if (this.recurrencePickerId() === todo.id) {
-      this.recurrencePickerId.set(null);
-      this.showCustomRecurrence.set(false);
-    } else {
-      this.recurrencePickerId.set(todo.id);
-      this.showCustomRecurrence.set(false);
-      // Pre-fill custom form from existing rule
-      if (todo.recurrenceRule) {
-        this.customType = todo.recurrenceRule.type === 'monthly' ? 'month' : todo.recurrenceRule.type === 'weekly' ? 'week' : 'day';
-        this.customInterval = todo.recurrenceRule.interval;
-        this.customDays = [0,1,2,3,4,5,6].map(d => todo.recurrenceRule?.daysOfWeek?.includes(d) ?? false);
-      } else {
-        this.customType = 'week';
-        this.customInterval = 1;
-        this.customDays = [false, false, false, false, false, false, false];
-      }
-    }
-  }
-
-  async setRecurrence(todo: TodoItem, rule: RecurrenceRule | null) {
-    await this.api.updateTodoItem(todo.id, { recurrenceRule: rule });
-    this.recurrencePickerId.set(null);
-    this.showCustomRecurrence.set(false);
-    await this.loadTodoItems();
-  }
-
-  openCustomRecurrence(todo: TodoItem) {
-    this.showCustomRecurrence.set(true);
-  }
-
-  async saveCustomRecurrence(todo: TodoItem) {
-    const rule: RecurrenceRule = {
-      type: this.customType === 'day' ? 'daily' : this.customType === 'week' ? 'weekly' : 'monthly',
-      interval: this.customInterval,
-    };
-    if (this.customType === 'week') {
-      rule.daysOfWeek = this.customDays.map((v, i) => v ? i : -1).filter(i => i >= 0);
-      if (rule.daysOfWeek.length === 0) rule.daysOfWeek = [new Date().getDay()];
-    }
-    if (this.customType === 'month') {
-      rule.dayOfMonth = new Date().getDate();
-    }
-    await this.setRecurrence(todo, rule);
-  }
-
-  isDaySelected(todo: TodoItem, dayIndex: number): boolean {
-    return todo.recurrenceRule?.type === 'weekly' && (todo.recurrenceRule.daysOfWeek?.includes(dayIndex) ?? false);
-  }
-
-  async toggleWeekDay(todo: TodoItem, dayIndex: number) {
-    const current = todo.recurrenceRule?.type === 'weekly' ? [...(todo.recurrenceRule.daysOfWeek ?? [])] : [];
-    const idx = current.indexOf(dayIndex);
-    if (idx >= 0) {
-      current.splice(idx, 1);
-    } else {
-      current.push(dayIndex);
-    }
-    if (current.length === 0) {
-      await this.setRecurrence(todo, null);
-    } else {
-      await this.setRecurrence(todo, { type: 'weekly', interval: 1, daysOfWeek: current.sort() });
-    }
-  }
-
-  todayDow(): number { return new Date().getDay(); }
-  todayDowName(): string { return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date().getDay()]; }
-  todayDate(): number { return new Date().getDate(); }
   ordinalSuffix(n: number): string {
     if (n > 3 && n < 21) return 'th';
-    switch (n % 10) { case 1: return 'st'; case 2: return 'nd'; case 3: return 'rd'; default: return 'th'; }
+    switch (n % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
   }
+
+  // --- Content / other existing bits ---
 
   async refreshContent() {
     if (!this.goal.sources || this.goal.sources.length === 0) return;
@@ -541,7 +571,6 @@ export class GoalViewComponent implements OnInit, OnChanges {
         this.goal.sources
       );
 
-      // POST each fetched item to the API
       for (const item of newContent) {
         try {
           await this.api.createContent(this.goal.id, {

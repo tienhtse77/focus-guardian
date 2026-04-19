@@ -3,7 +3,20 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Goal, ContentSource } from '../../services/storage.service';
 
-const ICONS = ['📚', '💻', '🎯', '🏋️', '🎨', '🎵', '🌍', '📷', '✍️', '🧘', '💡', '🚀'];
+const ICONS = [
+  '🇩🇪', // German
+  '🎹', // Piano
+  '🏃', // Running
+  '🏊', // Swimming
+  '💻', // Programming
+  '🤖', // AI
+  '🇬🇧', // English
+  '🇨🇳', // Chinese
+  '🇯🇵', // Japanese
+  '📚', // Books
+  // Older defaults kept so existing goals keep their chosen icon.
+  '🎯', '🏋️', '🎨', '🎵', '🌍', '📷', '✍️', '🧘', '💡', '🚀',
+];
 const COLORS = ['#4e6358', '#675e51', '#9f403d', '#6366f1', '#f97316', '#eab308', '#22c55e', '#14b8a6'];
 
 @Component({

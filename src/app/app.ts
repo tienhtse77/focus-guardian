@@ -143,10 +143,18 @@ export class App {
   }
 
   async onTaskAdded(event: { goalId: string | null; title: string; recurrenceRule?: RecurrenceRule }) {
-    await this.api.createTodoItem(event.goalId, event.title, event.recurrenceRule);
-    // Refresh the active view's todo list
+    // Route: with rule → create a RecurrenceTemplate (spawns today's task on the backend).
+    // Without → plain one-off task. Tasks never carry recurrence themselves anymore.
+    if (event.recurrenceRule) {
+      await this.api.createRecurrenceTemplate(event.goalId, event.title, event.recurrenceRule);
+    } else {
+      await this.api.createTodoItem(event.goalId, event.title);
+    }
+
+    // Refresh the active view's task list + stats.
     if (this.goalViewRef) {
       await this.goalViewRef.loadTodoItems();
+      await this.goalViewRef.loadTemplates();
       const items = this.goalViewRef.todoItems();
       this.todoStats.set({
         completed: items.filter(t => t.isCompleted).length,
@@ -154,7 +162,7 @@ export class App {
       });
     }
     if (this.homeRef) {
-      await this.homeRef.loadAllTodos();
+      await this.homeRef.refresh();
     }
   }
 

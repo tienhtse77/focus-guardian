@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Focus Guardian — Daily Diary Mockup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&family=Caveat:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .material-symbols-outlined.filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .editorial-shadow { box-shadow: 0 12px 32px rgba(45, 52, 51, 0.04); }
+
+    /* ── Paper texture ──
+       Background is applied via an inner .paper-backer element (full-cover absolute div)
+       rather than on .page-content itself. This is essential because StPageFlip clones
+       and re-wraps the page element during flips; CSS background on the outer element
+       is unreliable, but a real DOM child always carries its own paint. */
+    .page-content {
+      background-color: #fbf6e9;
+      position: relative;
+      padding: 36px 40px 36px 60px;
+      box-sizing: border-box;
+      overflow: hidden;
+      isolation: isolate;
+    }
+    .paper-backer {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background-color: #fbf6e9;
+      background-image:
+        /* fiber / paper grain (SVG fractal noise) */
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.40  0 0 0 0 0.36  0 0 0 0 0.28  0 0 0 0.07 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"),
+        /* soft warm wash */
+        radial-gradient(ellipse at 20% 30%, rgba(250, 236, 220, 0.7) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 70%, rgba(209, 232, 218, 0.4) 0%, transparent 60%),
+        /* bottom-corner age */
+        radial-gradient(circle at 10% 92%, rgba(103, 94, 81, 0.07) 0%, transparent 35%),
+        radial-gradient(circle at 90% 88%, rgba(103, 94, 81, 0.06) 0%, transparent 30%);
+      background-size: 220px 220px, auto, auto, auto, auto;
+      background-blend-mode: multiply, normal, normal, normal, normal;
+      pointer-events: none;
+    }
+    /* Spine shadow — soft gutter where pages meet the binding.
+       Left pages get it on the right edge; right pages get it on the left edge. */
+    .page-content.page-left::after { /* overlaid lines come from ::after elsewhere — we add spine via a separate layer */ }
+    .spine-shade {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 40px;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .page-left .spine-shade {
+      right: 0;
+      background: linear-gradient(to right,
+        transparent 0%,
+        rgba(103, 94, 81, 0.04) 60%,
+        rgba(103, 94, 81, 0.12) 100%);
+    }
+    .page-right .spine-shade {
+      left: 0;
+      background: linear-gradient(to left,
+        transparent 0%,
+        rgba(103, 94, 81, 0.04) 60%,
+        rgba(103, 94, 81, 0.12) 100%);
+    }
+    /* Visible page stack — thin stripes on the outer edges of the book, so the reader
+       can see there are many bound pages underneath the current spread. */
+    .book-stack {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 10px;
+      pointer-events: none;
+      background-image: repeating-linear-gradient(
+        to right,
+        rgba(212, 200, 172, 0.9) 0px,
+        rgba(212, 200, 172, 0.9) 1px,
+        rgba(246, 240, 221, 1) 1px,
+        rgba(246, 240, 221, 1) 2px
+      );
+      box-shadow: inset 0 0 0 1px rgba(103, 94, 81, 0.15);
+    }
+    .book-stack.left { left: -10px; border-radius: 2px 0 0 2px; }
+    .book-stack.right { right: -10px; border-radius: 0 2px 2px 0; }
+    /* Top & bottom edges of the stack */
+    .book-stack-edge {
+      position: absolute;
+      left: -10px;
+      right: -10px;
+      height: 10px;
+      pointer-events: none;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        rgba(212, 200, 172, 0.9) 0px,
+        rgba(212, 200, 172, 0.9) 1px,
+        rgba(246, 240, 221, 1) 1px,
+        rgba(246, 240, 221, 1) 2px
+      );
+      box-shadow: inset 0 0 0 1px rgba(103, 94, 81, 0.15);
+    }
+    .book-stack-edge.top { top: -10px; border-radius: 2px 2px 0 0; }
+    .book-stack-edge.bottom { bottom: -10px; border-radius: 0 0 2px 2px; }
+    /* Page that sits on the RIGHT of the spread gets mirrored padding so margin line is on its right edge */
+    .page-content.page-right {
+      padding: 36px 60px 36px 40px;
+    }
+    /* Force StPageFlip's internal wrappers to never be see-through */
+    .stf__item, .stf__block, .stf__parent {
+      background: #fbf6e9 !important;
+      background-color: #fbf6e9 !important;
+    }
+    html.dark .stf__item,
+    html.dark .stf__block,
+    html.dark .stf__parent {
+      background: #20272a !important;
+      background-color: #20272a !important;
+    }
+    html.dark .page-content,
+    html.dark .paper-backer {
+      background-color: #20272a;
+    }
+    html.dark .paper-backer {
+      background-image:
+        radial-gradient(ellipse at 20% 30%, rgba(46, 40, 32, 0.5) 0%, transparent 65%),
+        radial-gradient(ellipse at 80% 70%, rgba(42, 61, 51, 0.3) 0%, transparent 65%);
+    }
+
+    /* Desk / writing surface — gives the paper something to stand against during flip */
+    .desk {
+      padding: 48px 60px;
+      border-radius: 28px;
+      background:
+        radial-gradient(ellipse at 50% 50%, #d8d1bf 0%, #c8bfa8 70%, #b8ad92 100%);
+      box-shadow:
+        inset 0 2px 20px rgba(103, 94, 81, 0.15),
+        0 20px 50px rgba(45, 52, 51, 0.08);
+      position: relative;
+    }
+    /* Subtle wood-grain feel */
+    .desk::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 28px;
+      pointer-events: none;
+      background-image:
+        repeating-linear-gradient(
+          90deg,
+          transparent 0px,
+          transparent 60px,
+          rgba(103, 94, 81, 0.03) 60px,
+          rgba(103, 94, 81, 0.03) 61px
+        );
+    }
+
+    /* Faint ruled lines */
+    .page-content::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 39px,
+        rgba(78, 99, 88, 0.06) 39px,
+        rgba(78, 99, 88, 0.06) 40px
+      );
+    }
+
+    /* Left margin line (red editor line) */
+    .page-content::before {
+      content: '';
+      position: absolute;
+      left: 44px;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: rgba(159, 64, 61, 0.12);
+      z-index: 1;
+    }
+    /* Right pages: margin line on the right */
+    .page-content.page-right::before {
+      left: auto;
+      right: 44px;
+    }
+
+    /* Checkbox styling */
+    .diary-check {
+      width: 18px;
+      height: 18px;
+      border: 1.5px solid #adb3b2;
+      border-radius: 3px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .diary-check:hover {
+      border-color: #4e6358;
+      background: rgba(78, 99, 88, 0.05);
+    }
+    .diary-check.checked {
+      border-color: #4e6358;
+      background: #4e6358;
+    }
+
+    /* Strikethrough for completed */
+    .task-done {
+      text-decoration: line-through;
+      opacity: 0.45;
+    }
+
+    /* Nav arrow buttons */
+    .nav-arrow {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: transparent;
+      color: #5a6060;
+      border: none;
+    }
+    .nav-arrow:hover:not(:disabled) {
+      background: #ebeeed;
+      color: #4e6358;
+    }
+    .nav-arrow:disabled {
+      opacity: 0.25;
+      cursor: default;
+    }
+
+    /* StPageFlip container — hide raw page elements that bleed below the canvas */
+    .stf__wrapper {
+      margin: 0 auto;
+      overflow: hidden;
+    }
+    #book {
+      overflow: hidden;
+    }
+    /* Hide the source HTML pages; the library renders them onto its own canvas */
+    #book > .page-content {
+      display: none;
+    }
+    /* Don't let the global transition rule interfere with StPageFlip's fast opacity/shadow updates during a flip */
+    .stf__wrapper, .stf__wrapper *,
+    .stf__parent, .stf__parent *,
+    .stf__block, .stf__block *,
+    .stf__item, .stf__item * {
+      transition: none !important;
+    }
+
+    /* ── Dark mode ── */
+    html.dark { color-scheme: dark; }
+    html.dark body { background: #0f1412; color: #e4e9e8; }
+    html.dark .bg-background { background: #0f1412 !important; }
+    html.dark .bg-surface-container-lowest { background: #1a201e !important; }
+    html.dark .bg-surface-container-low { background: #1a201e !important; }
+    html.dark .bg-surface-container { background: #222826 !important; }
+    html.dark .bg-surface-container-high { background: #2a302e !important; }
+    html.dark .text-on-surface { color: #e4e9e8 !important; }
+    html.dark .text-on-surface-variant { color: #adb3b2 !important; }
+    html.dark .text-outline { color: #757c7b !important; }
+    html.dark .text-outline-variant { color: #5a6060 !important; }
+    html.dark .text-primary { color: #a8c4b5 !important; }
+    html.dark .editorial-shadow { box-shadow: 0 12px 32px rgba(0,0,0,0.2); }
+
+
+    html.dark .desk {
+      background: radial-gradient(ellipse at 50% 50%, #1a1e20 0%, #141719 70%, #0d0f11 100%);
+      box-shadow:
+        inset 0 2px 20px rgba(0, 0, 0, 0.4),
+        0 20px 50px rgba(0, 0, 0, 0.3);
+    }
+    html.dark .desk::before {
+      background-image: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 60px,
+        rgba(168, 196, 181, 0.02) 60px,
+        rgba(168, 196, 181, 0.02) 61px
+      );
+    }
+
+    html.dark .page-content::after {
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 39px,
+        rgba(168, 196, 181, 0.06) 39px,
+        rgba(168, 196, 181, 0.06) 40px
+      );
+    }
+
+    html.dark .page-content::before {
+      background: rgba(159, 64, 61, 0.08);
+    }
+
+    html.dark .diary-check {
+      border-color: #5a6060;
+    }
+    html.dark .diary-check:hover {
+      border-color: #a8c4b5;
+      background: rgba(168, 196, 181, 0.1);
+    }
+    html.dark .diary-check.checked {
+      border-color: #a8c4b5;
+      background: #4e6358;
+    }
+
+    html.dark .nav-arrow {
+      color: #adb3b2;
+    }
+    html.dark .nav-arrow:hover:not(:disabled) {
+      background: #2a302e;
+      color: #a8c4b5;
+    }
+
+    * { transition-property: background-color, color, opacity, box-shadow; transition-duration: 0.15s; }
+  </style>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: { extend: {
+        colors: {
+          primary: "#4e6358", "primary-dim": "#43574c", "primary-container": "#d1e8da",
+          "on-primary": "#e6fdee", "on-surface": "#2d3433", "on-surface-variant": "#5a6060",
+          surface: "#f9f9f8", "surface-container-low": "#f2f4f3", "surface-container": "#ebeeed",
+          "surface-container-lowest": "#ffffff", "surface-container-high": "#e4e9e8",
+          outline: "#757c7b", "outline-variant": "#adb3b2", background: "#f9f9f8",
+          tertiary: "#675e51", "tertiary-container": "#faecdc",
+          "on-tertiary-container": "#60574b", "on-tertiary-fixed-variant": "#6b6155",
+          error: "#9f403d", "error-container": "#fe8983",
+        },
+        fontFamily: { headline: ["Manrope"], body: ["Manrope"], label: ["Inter"] },
+        borderRadius: { DEFAULT: "1rem", lg: "2rem" },
+      }},
+    };
+  </script>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen">
+
+  <!-- Toolbar -->
+  <div class="fixed top-0 left-0 right-0 z-[100] bg-surface-container-lowest/90 backdrop-blur-sm px-6 py-3 flex items-center gap-3 editorial-shadow">
+    <span class="text-xs font-label font-bold text-on-surface-variant uppercase tracking-widest">Daily Diary</span>
+    <div class="flex-1"></div>
+    <button onclick="document.documentElement.classList.toggle('dark')" class="text-on-surface-variant hover:text-primary p-2 rounded-full hover:bg-surface-container">
+      <span class="material-symbols-outlined text-xl">dark_mode</span>
+    </button>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="fixed left-0 top-0 h-full w-[280px] bg-surface-container-low flex flex-col py-8 px-6 text-sm z-50">
+    <div class="mb-10 px-4 cursor-pointer group">
+      <h1 class="text-xl font-bold text-on-surface group-hover:text-primary transition-all">Focus Guardian</h1>
+      <p class="text-[10px] text-outline-variant mt-1 uppercase tracking-[0.2em] font-semibold">Curated Sanctuary</p>
+    </div>
+    <nav class="flex-1 space-y-1 overflow-y-auto">
+      <p class="text-[10px] uppercase tracking-[0.2em] text-outline-variant px-4 mb-3 font-semibold">Your Goals</p>
+      <button class="flex items-center gap-4 px-4 py-3 w-full rounded-full text-primary font-bold bg-surface editorial-shadow">
+        <span class="material-symbols-outlined text-lg">home</span>
+        <span>Home</span>
+      </button>
+      <button class="flex items-center gap-4 px-4 py-3 w-full rounded-full text-on-surface-variant hover:bg-surface-container">
+        <span class="text-lg">🌍</span><span>Learn English</span>
+      </button>
+      <button class="flex items-center gap-4 px-4 py-3 w-full rounded-full text-on-surface-variant hover:bg-surface-container">
+        <span class="text-lg">🇩🇪</span><span>German</span>
+      </button>
+      <button class="flex items-center gap-4 px-4 py-3 w-full rounded-full text-on-surface-variant hover:bg-surface-container">
+        <span class="text-lg">💻</span><span>Web Development</span>
+      </button>
+    </nav>
+  </aside>
+
+  <!-- Main content -->
+  <div class="ml-[280px] min-h-screen">
+    <div class="pt-24 pb-20 px-12 flex flex-col items-center">
+
+      <!-- Date navigation -->
+      <div class="flex items-center justify-center gap-6 mb-8">
+        <button id="btn-next" class="nav-arrow" onclick="goToNextDay()" title="Next day (←)" disabled>
+          <span class="material-symbols-outlined">chevron_left</span>
+        </button>
+        <div class="text-center select-none" style="min-width: 260px;">
+          <p id="diary-date" class="text-sm font-headline font-bold text-on-surface tracking-tight"></p>
+          <p id="diary-relative" class="text-[10px] font-label text-outline uppercase tracking-[0.2em] mt-1"></p>
+        </div>
+        <button id="btn-prev" class="nav-arrow" onclick="goToPrevDay()" title="Previous day (→)">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </button>
+      </div>
+
+      <!-- Desk / writing surface -->
+      <div class="desk">
+        <!-- Book shell: wraps the flipping book so we can draw the visible page stack around it -->
+        <div style="position:relative; width: 960px; height: 620px;">
+          <div class="book-stack left"></div>
+          <div class="book-stack right"></div>
+          <div class="book-stack-edge top"></div>
+          <div class="book-stack-edge bottom"></div>
+          <!-- Book container (two-page spread) -->
+          <div id="book" style="width: 960px; height: 620px; position: relative; z-index: 2;">
+            <!-- Pages will be injected by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Keyboard hint -->
+      <p class="text-center text-[10px] font-label text-outline mt-6">
+        Use
+        <span style="display:inline-flex;align-items:center;gap:2px;padding:1px 5px;background:#f2f4f3;border-radius:4px;font-size:10px;font-weight:500;color:#757c7b;">←</span>
+        <span style="display:inline-flex;align-items:center;gap:2px;padding:1px 5px;background:#f2f4f3;border-radius:4px;font-size:10px;font-weight:500;color:#757c7b;">→</span>
+        to flip pages, or drag the page corner
+      </p>
+
+    </div>
+  </div>
+
+  <script>
+    // ── Sample task data ──
+    const today = new Date();
+
+    function dateKey(d) {
+      return d.toISOString().split('T')[0];
+    }
+
+    function makeDate(offset) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + offset);
+      return d;
+    }
+
+    function formatDate(d) {
+      return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    function getRelativeDay(d) {
+      const diff = Math.round((today - d) / (1000 * 60 * 60 * 24));
+      if (diff === 0) return 'Today';
+      if (diff === 1) return 'Yesterday';
+      return `${diff} days ago`;
+    }
+
+    // Generate sample data for the last 30 days
+    const taskTemplates = [
+      { title: 'Morning meditation — 10 mins', goalIcon: null },
+      { title: 'Read 20 pages of current book', goalIcon: '🌍' },
+      { title: 'Duolingo German lesson', goalIcon: '🇩🇪' },
+      { title: 'Practice pronunciation — 15 mins', goalIcon: '🌍' },
+      { title: 'Watch 1 German YouTube video', goalIcon: '🇩🇪' },
+      { title: 'Review Angular RFC for 30 mins', goalIcon: '💻' },
+      { title: 'Evening journal — 5 mins', goalIcon: null },
+    ];
+
+    const NUM_PAGES = 30;
+    const allDays = [];
+
+    // Generate data: today is last page (right-most), oldest is first page
+    for (let i = NUM_PAGES - 1; i >= 0; i--) {
+      const d = makeDate(-i);
+      const isToday = i === 0;
+      const tasks = taskTemplates.map((t, idx) => {
+        // For today: partially done. For past: random completion.
+        let done;
+        if (isToday) {
+          done = idx < 2; // first 2 done
+        } else {
+          // Seed-ish random based on day+task index
+          done = ((i * 7 + idx * 13) % 5) !== 0;
+        }
+        const streak = done ? Math.max(1, Math.floor(Math.random() * 15)) : 0;
+        return { ...t, done, streak };
+      });
+      allDays.push({ date: d, tasks, isToday });
+    }
+
+    // ── Build page elements ──
+    const bookEl = document.getElementById('book');
+
+    // Sample reflection text varies per day so past pages feel "lived-in"
+    const reflections = [
+      'Slow morning, strong focus. The German vowels are starting to click.',
+      'Shipped the RFC edits. Walked 40 min. Felt good.',
+      'Rough patch in the afternoon — need to close the laptop earlier tomorrow.',
+      'Finished the chapter on hooks. Brewed coffee the right way for once.',
+      'Meditation felt shorter than 10 min today. A good sign.',
+      'Skipped Duolingo yesterday — today felt heavier than it should have.',
+      'Wrote for 25 minutes straight without checking phone. Small win.',
+      'Rewatched the talk on composition. Lots to chew on.',
+    ];
+
+    function buildTasksPage(day, dayIndex) {
+      const pageDiv = document.createElement('div');
+      pageDiv.className = 'page-content page-left';
+      pageDiv.setAttribute('data-density', 'soft');
+      pageDiv.style.height = '100%';
+
+      const done = day.tasks.filter(t => t.done).length;
+      const total = day.tasks.length;
+      let badgeText, badgeClass;
+      if (done === total) {
+        badgeText = `✓ Perfect day — ${done}/${total}`;
+        badgeClass = 'color: #4e6358; font-weight: 600;';
+      } else {
+        badgeText = `${done} of ${total} completed`;
+        badgeClass = 'color: #757c7b;';
+      }
+
+      let html = `
+        <div class="paper-backer"></div>
+        <div class="spine-shade"></div>
+        <div style="position:relative; z-index:2;">
+          <p style="font-family:Manrope; font-size:11px; font-weight:700; color:#757c7b; text-transform:uppercase; letter-spacing:0.25em; margin-bottom:4px;">
+            ${formatDate(day.date)}
+          </p>
+          <p style="font-family:Inter; font-size:9px; color:#adb3b2; text-transform:uppercase; letter-spacing:0.2em; margin-bottom:20px;">
+            ${getRelativeDay(day.date)}
+          </p>
+
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:24px;">
+            <div style="flex:1; height:1px; background:#ebeeed;"></div>
+            <span style="font-family:Inter; font-size:10px; text-transform:uppercase; letter-spacing:0.15em; ${badgeClass}">${badgeText}</span>
+            <div style="flex:1; height:1px; background:#ebeeed;"></div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:4px;">
+      `;
+
+      day.tasks.forEach((task, tIdx) => {
+        const checkBg = task.done ? 'background:#4e6358; border-color:#4e6358;' : '';
+        const checkIcon = task.done ? '<span class="material-symbols-outlined" style="font-size:14px; color:#e6fdee;">check</span>' : '';
+        const titleStyle = task.done ? 'text-decoration:line-through; opacity:0.45;' : 'color:#2d3433;';
+        const streakHtml = task.streak > 0
+          ? `<span style="font-family:Inter; font-size:11px; font-weight:600; color:${task.done ? '#4e6358' : '#757c7b'}; flex-shrink:0;">
+              <span class="material-symbols-outlined filled" style="font-size:12px; vertical-align:-1px; margin-right:1px;">local_fire_department</span>${task.streak}
+            </span>`
+          : '';
+        const goalHtml = task.goalIcon
+          ? `<span style="font-size:13px; flex-shrink:0;">${task.goalIcon}</span>`
+          : '';
+
+        html += `
+          <div style="display:flex; align-items:center; gap:12px; padding:8px 6px; border-radius:8px;" class="task-row"
+               data-day="${dayIndex}" data-task="${tIdx}">
+            <div class="diary-check${task.done ? ' checked' : ''}" style="${checkBg}" onclick="toggleTask(${dayIndex}, ${tIdx}, this)">
+              ${checkIcon}
+            </div>
+            <span style="flex:1; font-size:14px; font-weight:500; line-height:1.4; font-family:Manrope; ${titleStyle}" class="task-title">
+              ${task.title}
+            </span>
+            ${goalHtml}
+            ${streakHtml}
+          </div>
+        `;
+      });
+
+      html += `
+          </div>
+
+          <div style="position:absolute; bottom:20px; left:0; right:0; text-align:center;">
+            <span style="font-family:Inter; font-size:9px; color:rgba(173,179,178,0.5); text-transform:uppercase; letter-spacing:0.2em;">
+              ${dateKey(day.date)}
+            </span>
+          </div>
+        </div>
+      `;
+
+      pageDiv.innerHTML = html;
+      return pageDiv;
+    }
+
+    function buildNotesPage(day, dayIndex) {
+      const pageDiv = document.createElement('div');
+      pageDiv.className = 'page-content page-right';
+      pageDiv.setAttribute('data-density', 'soft');
+      pageDiv.style.height = '100%';
+
+      // Past days show sample handwritten-feel text; today is blank for writing
+      const reflection = day.isToday
+        ? ''
+        : reflections[Math.abs(Math.round((today - day.date) / 86400000)) % reflections.length];
+
+      const reflectionHtml = reflection
+        ? `<p style="font-family:'Caveat','Kalam',cursive,Manrope; font-size:18px; line-height:40px; color:#3a4540; margin:0; padding-top:2px;">${reflection}</p>`
+        : `<p style="font-family:Inter; font-size:11px; color:#adb3b2; font-style:italic; padding-top:4px;">A space for tonight…</p>`;
+
+      const html = `
+        <div class="paper-backer"></div>
+        <div class="spine-shade"></div>
+        <div style="position:relative; z-index:2; height:100%; display:flex; flex-direction:column;">
+          <p style="font-family:Manrope; font-size:11px; font-weight:700; color:#757c7b; text-transform:uppercase; letter-spacing:0.25em; margin-bottom:4px; text-align:right;">
+            Reflection
+          </p>
+          <p style="font-family:Inter; font-size:9px; color:#adb3b2; text-transform:uppercase; letter-spacing:0.2em; margin-bottom:20px; text-align:right;">
+            ${day.isToday ? 'Before bed tonight' : formatDate(day.date).split(',')[0]}
+          </p>
+
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:24px;">
+            <div style="flex:1; height:1px; background:#ebeeed;"></div>
+            <span style="font-family:Inter; font-size:10px; text-transform:uppercase; letter-spacing:0.15em; color:#757c7b;">How did today feel?</span>
+            <div style="flex:1; height:1px; background:#ebeeed;"></div>
+          </div>
+
+          <div style="flex:1;">
+            ${reflectionHtml}
+          </div>
+
+          <div style="position:absolute; bottom:20px; left:0; right:0; text-align:center;">
+            <span style="font-family:Inter; font-size:9px; color:rgba(173,179,178,0.5); text-transform:uppercase; letter-spacing:0.2em;">
+              ${dateKey(day.date)}
+            </span>
+          </div>
+        </div>
+      `;
+
+      pageDiv.innerHTML = html;
+      return pageDiv;
+    }
+
+    // Build the book: each day occupies one spread (left = tasks, right = notes)
+    allDays.forEach((day, dayIndex) => {
+      bookEl.appendChild(buildTasksPage(day, dayIndex));
+      bookEl.appendChild(buildNotesPage(day, dayIndex));
+    });
+
+    // ── Initialize StPageFlip (two-page / landscape) ──
+    const pageFlip = new St.PageFlip(bookEl, {
+      width: 480,
+      height: 620,
+      size: 'fixed',
+      showCover: false,
+      maxShadowOpacity: 0.6,
+      mobileScrollSupport: false,
+      flippingTime: 550,
+      usePortrait: false,
+      startPage: (allDays.length - 1) * 2, // start on today's spread (tasks on left)
+      drawShadow: true,
+      autoSize: false,
+    });
+
+    pageFlip.loadFromHTML(document.querySelectorAll('.page-content'));
+
+    // ── Sync date display with current spread (each day = 2 pages) ──
+    // dayIndex = Math.floor(pageIndex / 2)
+    let currentDayIndex = allDays.length - 1;
+
+    function updateDateDisplay() {
+      const day = allDays[currentDayIndex];
+      document.getElementById('diary-date').textContent = formatDate(day.date);
+      document.getElementById('diary-relative').textContent = getRelativeDay(day.date);
+      document.getElementById('btn-next').disabled = day.isToday;
+      document.getElementById('btn-prev').disabled = currentDayIndex === 0;
+    }
+
+    updateDateDisplay();
+
+    pageFlip.on('flip', (e) => {
+      currentDayIndex = Math.floor(e.data / 2);
+      updateDateDisplay();
+    });
+
+    // ── Navigation (per-day = flip a full spread = 2 pages) ──
+    function goToPrevDay() {
+      if (currentDayIndex > 0) {
+        pageFlip.flipPrev('bottom');
+      }
+    }
+
+    function goToNextDay() {
+      if (currentDayIndex < allDays.length - 1) {
+        pageFlip.flipNext('bottom');
+      }
+    }
+
+    // Keyboard — left arrow turns page left (next day), right arrow turns page right (prev day)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goToNextDay();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        goToPrevDay();
+      }
+    });
+
+    // ── Toggle task (today only) ──
+    function toggleTask(dayIndex, taskIndex, el) {
+      const day = allDays[dayIndex];
+      if (!day.isToday) return;
+
+      const task = day.tasks[taskIndex];
+      task.done = !task.done;
+
+      if (task.done) {
+        el.classList.add('checked');
+        el.style.background = '#4e6358';
+        el.style.borderColor = '#4e6358';
+        el.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px; color:#e6fdee;">check</span>';
+      } else {
+        el.classList.remove('checked');
+        el.style.background = '';
+        el.style.borderColor = '';
+        el.innerHTML = '';
+      }
+
+      const row = el.closest('.task-row');
+      const title = row.querySelector('.task-title');
+      if (task.done) {
+        title.style.textDecoration = 'line-through';
+        title.style.opacity = '0.45';
+      } else {
+        title.style.textDecoration = '';
+        title.style.opacity = '';
+        title.style.color = '#2d3433';
+      }
+
+      // Left (tasks) page of this day is at page index dayIndex * 2
+      const done = day.tasks.filter(t => t.done).length;
+      const total = day.tasks.length;
+      const pageEl = document.querySelectorAll('.page-content')[dayIndex * 2];
+      const badge = pageEl && pageEl.querySelector('span[style*="letter-spacing:0.15em"]');
+      if (badge) {
+        if (done === total) {
+          badge.textContent = `✓ Perfect day — ${done}/${total}`;
+          badge.style.color = '#4e6358';
+          badge.style.fontWeight = '600';
+        } else {
+          badge.textContent = `${done} of ${total} completed`;
+          badge.style.color = '#757c7b';
+          badge.style.fontWeight = '';
+        }
+      }
+    }
+  </script>
+</body>
+</html>

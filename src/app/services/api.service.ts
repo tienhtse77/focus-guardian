@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../environment';
-import { Goal, Content, SavedPage, ContentSource, PageStatus, TodoItem, RecurrenceRule } from './storage.service';
+import { Goal, Content, SavedPage, ContentSource, PageStatus, TodoItem, RecurrenceRule, RecurrenceTemplate } from './storage.service';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -110,7 +110,7 @@ export class ApiService {
     await firstValueFrom(this.http.delete<void>(`${this.baseUrl}/saved-pages/${pageId}`));
   }
 
-  // --- TodoItems ---
+  // --- Tasks (TodoItems) ---
 
   async getTodoItems(goalId: string, date?: string): Promise<TodoItem[]> {
     try {
@@ -125,19 +125,20 @@ export class ApiService {
     }
   }
 
-  async createTodoItem(goalId: string | null, title: string, recurrenceRule?: RecurrenceRule): Promise<TodoItem> {
-    const body: any = { title };
-    if (recurrenceRule) body.recurrenceRule = recurrenceRule;
+  async createTodoItem(goalId: string | null, title: string): Promise<TodoItem> {
     const url = goalId
       ? `${this.baseUrl}/goals/${goalId}/todos`
       : `${this.baseUrl}/todos`;
-    const dto = await firstValueFrom(this.http.post<any>(url, body));
+    const dto = await firstValueFrom(this.http.post<any>(url, { title }));
     return this.mapTodoItemFromApi(dto);
   }
 
-  async getGeneralTodoItems(): Promise<TodoItem[]> {
+  async getGeneralTodoItems(date?: string): Promise<TodoItem[]> {
     try {
-      const dtos = await firstValueFrom(this.http.get<any[]>(`${this.baseUrl}/todos/general`));
+      const url = date
+        ? `${this.baseUrl}/todos/general?date=${date}`
+        : `${this.baseUrl}/todos/general`;
+      const dtos = await firstValueFrom(this.http.get<any[]>(url));
       return (dtos ?? []).map(dto => this.mapTodoItemFromApi(dto));
     } catch (error) {
       console.error('Failed to fetch general todo items:', error);
@@ -145,7 +146,7 @@ export class ApiService {
     }
   }
 
-  async updateTodoItem(todoId: string, updates: { title?: string; isCompleted?: boolean; recurrenceRule?: RecurrenceRule | null }): Promise<TodoItem> {
+  async updateTodoItem(todoId: string, updates: { title?: string; isCompleted?: boolean }): Promise<TodoItem> {
     const dto = await firstValueFrom(
       this.http.patch<any>(`${this.baseUrl}/todos/${todoId}`, updates)
     );
@@ -154,6 +155,54 @@ export class ApiService {
 
   async deleteTodoItem(todoId: string): Promise<void> {
     await firstValueFrom(this.http.delete<void>(`${this.baseUrl}/todos/${todoId}`));
+  }
+
+  // --- RecurrenceTemplates ---
+
+  async getRecurrenceTemplates(goalId: string): Promise<RecurrenceTemplate[]> {
+    try {
+      const dtos = await firstValueFrom(
+        this.http.get<any[]>(`${this.baseUrl}/goals/${goalId}/templates`)
+      );
+      return (dtos ?? []).map(dto => this.mapTemplateFromApi(dto));
+    } catch (error) {
+      console.error('Failed to fetch templates:', error);
+      return [];
+    }
+  }
+
+  async getGeneralRecurrenceTemplates(): Promise<RecurrenceTemplate[]> {
+    try {
+      const dtos = await firstValueFrom(
+        this.http.get<any[]>(`${this.baseUrl}/templates/general`)
+      );
+      return (dtos ?? []).map(dto => this.mapTemplateFromApi(dto));
+    } catch (error) {
+      console.error('Failed to fetch general templates:', error);
+      return [];
+    }
+  }
+
+  async createRecurrenceTemplate(goalId: string | null, title: string, rule: RecurrenceRule): Promise<RecurrenceTemplate> {
+    const url = goalId
+      ? `${this.baseUrl}/goals/${goalId}/templates`
+      : `${this.baseUrl}/templates`;
+    const dto = await firstValueFrom(this.http.post<any>(url, { title, rule }));
+    return this.mapTemplateFromApi(dto);
+  }
+
+  async updateRecurrenceTemplate(
+    templateId: string,
+    updates: { title?: string; rule?: RecurrenceRule; isActive?: boolean }
+  ): Promise<RecurrenceTemplate> {
+    const dto = await firstValueFrom(
+      this.http.patch<any>(`${this.baseUrl}/templates/${templateId}`, updates)
+    );
+    return this.mapTemplateFromApi(dto);
+  }
+
+  async deleteRecurrenceTemplate(templateId: string): Promise<void> {
+    await firstValueFrom(this.http.delete<void>(`${this.baseUrl}/templates/${templateId}`));
   }
 
   // --- Private mapping helpers ---
@@ -166,12 +215,21 @@ export class ApiService {
       isCompleted: dto.isCompleted ?? false,
       createdAt: dto.createdAt ? new Date(dto.createdAt).getTime() : Date.now(),
       completedAt: dto.completedAt ? new Date(dto.completedAt).getTime() : undefined,
-      recurrenceRule: dto.recurrenceRule ?? undefined,
-      isRecurringTemplate: dto.isRecurringTemplate ?? undefined,
       templateId: dto.templateId ?? undefined,
       dueDate: dto.dueDate ?? undefined,
-      currentStreak: dto.currentStreak ?? undefined,
-      longestStreak: dto.longestStreak ?? undefined,
+    };
+  }
+
+  private mapTemplateFromApi(dto: any): RecurrenceTemplate {
+    return {
+      id: dto.id,
+      goalId: dto.goalId ?? undefined,
+      title: dto.title,
+      rule: dto.rule,
+      isActive: dto.isActive ?? true,
+      createdAt: dto.createdAt ? new Date(dto.createdAt).getTime() : Date.now(),
+      currentStreak: dto.currentStreak ?? 0,
+      longestStreak: dto.longestStreak ?? 0,
     };
   }
 
