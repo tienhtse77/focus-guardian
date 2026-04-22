@@ -80,7 +80,6 @@ function dayDiff(a: Date, b: Date): number {
                   <button
                     class="check"
                     [class.done]="task.isCompleted"
-                    [disabled]="!isToday()"
                     (click)="toggle(task)"
                     [attr.aria-label]="task.isCompleted ? 'Mark incomplete' : 'Mark complete'"
                   >
@@ -427,7 +426,6 @@ export class HomeComponent implements OnInit, OnChanges {
 
   // ── Toggle completion ──────────────────────────────────────────────────
   async toggle(task: TaskRow) {
-    if (!this.isToday()) return;
     const key = this.currentKey();
     const prev = task.isCompleted;
     task.isCompleted = !prev;
@@ -470,7 +468,6 @@ export class HomeComponent implements OnInit, OnChanges {
 
   private async loadDay(d: Date) {
     const key = toDateKey(d);
-    const isToday = dayDiff(d, this.todayRef) === 0;
     const rows: TaskRow[] = [];
 
     // Per-goal tasks for this date
@@ -478,7 +475,6 @@ export class HomeComponent implements OnInit, OnChanges {
       try {
         const todos = await this.api.getTodoItems(goal.id, key);
         for (const todo of todos) {
-          if (!this.keepOnDay(todo, isToday)) continue;
           rows.push(this.toRow(todo, goal.icon));
         }
       } catch { /* swallow */ }
@@ -488,17 +484,11 @@ export class HomeComponent implements OnInit, OnChanges {
     try {
       const generals = await this.api.getGeneralTodoItems(key);
       for (const todo of generals) {
-        if (!this.keepOnDay(todo, isToday)) continue;
         rows.unshift(this.toRow(todo, undefined));
       }
     } catch { /* swallow */ }
 
     this.days.update(m => new Map(m).set(key, rows));
-  }
-
-  /** Show only template-origin tasks on past days; include one-offs on today. */
-  private keepOnDay(todo: TodoItem, isToday: boolean): boolean {
-    return !!todo.templateId || isToday;
   }
 
   private toRow(todo: TodoItem, goalIcon: string | undefined): TaskRow {
