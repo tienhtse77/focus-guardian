@@ -19,6 +19,14 @@
         <span class="text-sm font-light text-on-surface-variant">{{ greeting() }}</span>
       </div>
       <div class="flex items-center gap-3">
+        @if (isHome()) {
+          <button (click)="togglePrivacyMode()"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all duration-200"
+            title="Privacy mode (Ctrl+Shift+H)">
+            <span class="material-symbols-outlined text-lg">visibility_off</span>
+            <span class="text-xs font-label font-medium">Privacy</span>
+          </button>
+        }
         <button (click)="showCommandPalette.set(true)"
           class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all duration-200"
           title="Command palette (Ctrl+K)">
@@ -53,6 +61,11 @@
   <!-- Goal Form Modal -->
   @if (showGoalForm()) {
     <app-goal-form [goal]="editingGoal()" (save)="saveGoal($event)" (cancel)="closeGoalForm()" />
+  }
+
+  <!-- Privacy Cover -->
+  @if (isHome() && isPrivacyMode()) {
+    <app-privacy-cover (exit)="togglePrivacyMode()" />
   }
 
   <!-- Command Palette -->

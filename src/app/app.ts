@@ -5,14 +5,16 @@ import { GoalViewComponent } from './components/goal-view/goal-view.component';
 import { GoalFormComponent } from './components/goal-form/goal-form.component';
 import { CommandPaletteComponent } from './components/command-palette/command-palette.component';
 import { HomeComponent } from './components/home/home.component';
+import { PrivacyCoverComponent } from './components/privacy-cover/privacy-cover.component';
 import { Goal, RecurrenceRule } from './services/storage.service';
 import { ApiService } from './services/api.service';
 import { themeService } from './services/theme.service';
+import { privacyModeService } from './services/privacy-mode.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, GoalViewComponent, GoalFormComponent, CommandPaletteComponent, HomeComponent],
+  imports: [CommonModule, SidebarComponent, GoalViewComponent, GoalFormComponent, CommandPaletteComponent, HomeComponent, PrivacyCoverComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -25,6 +27,7 @@ export class App {
   showGoalForm = signal(false);
   editingGoal = signal<Goal | null>(null);
   isDarkMode = signal(false);
+  isPrivacyMode = signal(false);
   showCommandPalette = signal(false);
   todoStats = signal<{ completed: number; total: number } | null>(null);
 
@@ -46,6 +49,7 @@ export class App {
   constructor() {
     this.loadGoals();
     this.initTheme();
+    this.initPrivacyMode();
   }
 
   private initTheme() {
@@ -61,6 +65,17 @@ export class App {
   async toggleTheme() {
     await themeService.toggleTheme();
     this.isDarkMode.set(themeService.isDarkMode());
+  }
+
+  private initPrivacyMode() {
+    this.isPrivacyMode.set(privacyModeService.isEnabled());
+    privacyModeService.onChange((enabled) => {
+      this.isPrivacyMode.set(enabled);
+    });
+  }
+
+  async togglePrivacyMode() {
+    await privacyModeService.toggle();
   }
 
   async loadGoals() {
@@ -135,6 +150,10 @@ export class App {
     if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
       event.preventDefault();
       this.showCommandPalette.set(true);
+    }
+    if ((event.ctrlKey || event.metaKey) && event.shiftKey && (event.key === 'H' || event.key === 'h')) {
+      event.preventDefault();
+      this.togglePrivacyMode();
     }
   }
 
