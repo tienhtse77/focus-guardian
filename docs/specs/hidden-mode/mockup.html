@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Focus Guardian — Privacy Mode Mockup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .material-symbols-outlined.filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .editorial-shadow { box-shadow: 0 12px 32px rgba(45, 52, 51, 0.04); }
+    .state-tab { cursor: pointer; padding: 6px 14px; border-radius: 9999px; font-size: 11px; font-weight: 600; transition: all 0.2s; user-select: none; white-space: nowrap; }
+    .state-tab.active { background: #4E6358; color: #e6fdee; }
+    .state-tab:not(.active) { background: #ebeeed; color: #5a6060; }
+    * { transition-property: background-color, color, opacity, box-shadow, transform; transition-duration: 0.15s; }
+
+    .progress-ring { transform: rotate(-90deg); }
+    .progress-ring circle { transition: stroke-dashoffset 0.6s ease; }
+
+    /* Privacy cover styling */
+    .privacy-cover {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #f9f9f8;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .privacy-cover.on { opacity: 1; pointer-events: auto; }
+    html.dark .privacy-cover { background: #0f1412; }
+    .clock-time { font-feature-settings: "tnum"; letter-spacing: -0.04em; }
+
+    html.dark { color-scheme: dark; }
+    html.dark body { background: #0f1412; color: #e4e9e8; }
+    html.dark .bg-background { background: #0f1412 !important; }
+    html.dark .bg-surface-container-lowest { background: #1a201e !important; }
+    html.dark .bg-surface-container-low { background: #1a201e !important; }
+    html.dark .bg-surface-container { background: #222826 !important; }
+    html.dark .bg-surface-container-high { background: #2a302e !important; }
+    html.dark .bg-tertiary-container { background: #2e2820 !important; }
+    html.dark .bg-primary-container { background: #2a3d33 !important; }
+    html.dark .text-on-surface { color: #e4e9e8 !important; }
+    html.dark .text-on-surface-variant { color: #adb3b2 !important; }
+    html.dark .text-outline { color: #757c7b !important; }
+    html.dark .text-outline-variant { color: #5a6060 !important; }
+    html.dark .text-primary { color: #a8c4b5 !important; }
+    html.dark .editorial-shadow { box-shadow: 0 12px 32px rgba(0,0,0,0.2); }
+    html.dark .state-tab:not(.active) { background: #222826; color: #adb3b2; }
+  </style>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: { extend: {
+        colors: {
+          primary: "#4e6358", "primary-dim": "#43574c", "primary-container": "#d1e8da",
+          "on-primary": "#e6fdee", "on-surface": "#2d3433", "on-surface-variant": "#5a6060",
+          surface: "#f9f9f8", "surface-container-low": "#f2f4f3", "surface-container": "#ebeeed",
+          "surface-container-lowest": "#ffffff", "surface-container-high": "#e4e9e8",
+          outline: "#757c7b", "outline-variant": "#adb3b2", background: "#f9f9f8",
+          tertiary: "#675e51", "tertiary-container": "#faecdc",
+          "on-tertiary-container": "#60574b", "on-tertiary-fixed-variant": "#6b6155",
+          error: "#9f403d", "error-container": "#fe8983",
+        },
+        fontFamily: { headline: ["Manrope"], body: ["Manrope"], label: ["Inter"] },
+        borderRadius: { DEFAULT: "1rem", lg: "2rem" },
+      }},
+    };
+  </script>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen">
+
+  <!-- Demo switcher -->
+  <div class="fixed top-0 left-0 right-0 z-[300] bg-surface-container-lowest/90 backdrop-blur-sm px-6 py-3 flex items-center gap-2 editorial-shadow">
+    <span class="text-xs font-label font-bold text-on-surface-variant uppercase tracking-widest mr-2">Privacy Mode</span>
+    <div class="state-tab active" data-state="off" onclick="switchState('off')">1. Off</div>
+    <div class="state-tab" data-state="on" onclick="switchState('on')">2. On (cover)</div>
+    <div class="ml-4 text-[11px] text-outline-variant font-label">Tip: press <kbd class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant text-[10px]">Ctrl</kbd>+<kbd class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant text-[10px]">Shift</kbd>+<kbd class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant text-[10px]">H</kbd> to toggle</div>
+    <div class="flex-1"></div>
+    <button onclick="document.documentElement.classList.toggle('dark')" class="text-on-surface-variant hover:text-primary p-2 rounded-full hover:bg-surface-container">
+      <span class="material-symbols-outlined text-xl">dark_mode</span>
+    </button>
+  </div>
+
+  <!-- ============================================================ -->
+  <!--  Underlying Home + Sidebar (always rendered; cover sits on top)  -->
+  <!-- ============================================================ -->
+
+  <!-- Sidebar -->
+  <aside class="fixed left-0 top-0 h-full w-[280px] bg-surface-container-low flex flex-col py-8 px-6 text-sm z-50">
+    <div class="mb-10 px-4 cursor-pointer group">
+      <h1 class="text-xl font-bold text-on-surface group-hover:text-primary transition-all">Focus Guardian</h1>
+      <p class="text-[10px] text-outline-variant mt-1 uppercase tracking-[0.2em] font-semibold">Curated Sanctuary</p>
+    </div>
+    <nav class="flex-1 space-y-1 overflow-y-auto">
+      <p class="text-[10px] uppercase tracking-[0.2em] text-outline-variant px-4 mb-3 font-semibold">Your Goals</p>
+      <button class="flex items-center gap-4 px-4 py-3 w-full rounded-full text-primary font-bold bg-surface editorial-shadow">
+        <span class="material-symbols-outlined text-lg">home</span>
+        <span>Home</span>
+      </button>
+      <button class="flex items-center gap-4 px-4 py-3 w-full rounded-full text-on-surface-variant hover:bg-surface-container">
+        <span class="text-lg">🌍</span><span>Learn English</span>
+      </button>
+      <button class="flex items-center gap-4 px-4 py-3 w-full rounded-full text-on-surface-variant hover:bg-surface-container">
+        <span class="text-lg">🇩🇪</span><span>German</span>
+      </button>
+      <button class="flex items-center gap-4 px-4 py-3 w-full rounded-full text-on-surface-variant hover:bg-surface-container">
+        <span class="text-lg">💻</span><span>Web Development</span>
+      </button>
+      <button class="flex items-center gap-4 px-4 py-3 w-full rounded-full text-on-surface-variant hover:bg-surface-container">
+        <span class="text-lg">🧘</span><span>Meditation</span>
+      </button>
+      <button class="flex items-center gap-4 px-4 py-3 w-full rounded-full text-outline hover:text-primary hover:bg-surface-container mt-2">
+        <span class="material-symbols-outlined text-lg">add_circle</span><span>Add Goal</span>
+      </button>
+    </nav>
+    <div class="mt-auto pt-6" style="border-top: 1px solid rgba(173,179,178,0.15)">
+      <a href="#" class="flex items-center gap-4 px-4 py-2 text-on-surface-variant hover:bg-surface-container hover:text-primary rounded-full text-sm">
+        <span class="material-symbols-outlined text-lg">settings</span><span>Settings</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="ml-[280px] min-h-screen">
+    <header class="fixed top-12 right-0 w-[calc(100%-280px)] bg-background flex justify-between items-center px-12 h-20 z-40">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-outline text-lg">wb_sunny</span>
+        <span class="text-sm font-light text-on-surface-variant">Good morning</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <!-- NEW: Privacy toggle button in header -->
+        <button onclick="switchState('on')" title="Enter Privacy Mode (Ctrl+Shift+H)" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-primary">
+          <span class="material-symbols-outlined text-lg">visibility_off</span>
+          <span class="text-xs font-label font-medium">Privacy</span>
+        </button>
+        <button class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-primary">
+          <span class="material-symbols-outlined text-lg">terminal</span>
+          <span style="display:inline-flex;align-items:center;gap:2px;padding:1px 5px;background:#f2f4f3;border-radius:4px;font-size:11px;font-weight:500;color:#757c7b;">Ctrl+K</span>
+        </button>
+        <button onclick="document.documentElement.classList.toggle('dark')" class="text-on-surface-variant hover:text-primary p-2 rounded-full hover:bg-surface-container">
+          <span class="material-symbols-outlined">dark_mode</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="pt-40 pb-20 px-12">
+      <div class="max-w-3xl">
+        <div class="mb-10">
+          <h1 class="text-3xl font-headline font-extrabold text-on-surface tracking-tight">Today's Focus</h1>
+          <p class="text-sm text-on-surface-variant font-light mt-2">7 tasks waiting for your attention</p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6">
+          <!-- Card: English -->
+          <div class="bg-surface-container-lowest rounded-2xl editorial-shadow p-7 flex gap-7">
+            <div class="flex flex-col items-center gap-2 shrink-0">
+              <div class="relative">
+                <svg class="progress-ring" width="64" height="64">
+                  <circle cx="32" cy="32" r="28" fill="none" stroke="#ebeeed" stroke-width="4" />
+                  <circle cx="32" cy="32" r="28" fill="none" stroke="#4e6358" stroke-width="4" stroke-linecap="round" stroke-dasharray="175.9" stroke-dashoffset="117.3" />
+                </svg>
+                <span class="absolute inset-0 flex items-center justify-center text-2xl">🌍</span>
+              </div>
+              <span class="text-[10px] font-label font-bold text-primary">1/3</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-base font-headline font-bold text-on-surface mb-3">Learn English</h3>
+              <div class="space-y-2">
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-xl text-on-surface-variant">check_box_outline_blank</span>
+                  <span class="text-sm text-on-surface">Watch 2 episodes of British TV show</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-xl text-on-surface-variant">check_box_outline_blank</span>
+                  <span class="text-sm text-on-surface">Practice pronunciation for 15 mins</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Therapy & Mental Health (the kind of thing you don't want on a screen share) -->
+          <div class="bg-surface-container-lowest rounded-2xl editorial-shadow p-7 flex gap-7">
+            <div class="flex flex-col items-center gap-2 shrink-0">
+              <div class="relative">
+                <svg class="progress-ring" width="64" height="64">
+                  <circle cx="32" cy="32" r="28" fill="none" stroke="#ebeeed" stroke-width="4" />
+                  <circle cx="32" cy="32" r="28" fill="none" stroke="#4e6358" stroke-width="4" stroke-linecap="round" stroke-dasharray="175.9" stroke-dashoffset="87.95" />
+                </svg>
+                <span class="absolute inset-0 flex items-center justify-center text-2xl">🧘</span>
+              </div>
+              <span class="text-[10px] font-label font-bold text-primary">1/2</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-base font-headline font-bold text-on-surface mb-3">Meditation & Therapy</h3>
+              <div class="space-y-2">
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-xl text-on-surface-variant">check_box_outline_blank</span>
+                  <span class="text-sm text-on-surface">Journal: how did the session with Dr. K go?</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-xl text-on-surface-variant">check_box_outline_blank</span>
+                  <span class="text-sm text-on-surface">10-minute breathing exercise</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Job Search (also sensitive) -->
+          <div class="bg-surface-container-lowest rounded-2xl editorial-shadow p-7 flex gap-7">
+            <div class="flex flex-col items-center gap-2 shrink-0">
+              <div class="relative">
+                <svg class="progress-ring" width="64" height="64">
+                  <circle cx="32" cy="32" r="28" fill="none" stroke="#ebeeed" stroke-width="4" />
+                  <circle cx="32" cy="32" r="28" fill="none" stroke="#4e6358" stroke-width="4" stroke-linecap="round" stroke-dasharray="175.9" stroke-dashoffset="175.9" />
+                </svg>
+                <span class="absolute inset-0 flex items-center justify-center text-2xl">💼</span>
+              </div>
+              <span class="text-[10px] font-label font-bold text-outline">0/2</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-base font-headline font-bold text-on-surface mb-3">Job Search</h3>
+              <div class="space-y-2">
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-xl text-on-surface-variant">check_box_outline_blank</span>
+                  <span class="text-sm text-on-surface">Apply to 3 senior backend roles</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-xl text-on-surface-variant">check_box_outline_blank</span>
+                  <span class="text-sm text-on-surface">Follow up with recruiter at Acme Corp</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!--  Privacy cover (sits on top when on)                          -->
+  <!-- ============================================================ -->
+  <div id="privacy-cover" class="privacy-cover">
+    <!-- Discreet exit affordance, top-right -->
+    <button onclick="switchState('off')" title="Exit Privacy Mode (Ctrl+Shift+H)" class="absolute top-6 right-6 flex items-center gap-2 px-3 py-1.5 rounded-lg text-outline-variant hover:text-on-surface hover:bg-surface-container">
+      <span class="material-symbols-outlined text-lg">visibility</span>
+      <span class="text-xs font-label">Exit</span>
+    </button>
+
+    <!-- Center: clock + date -->
+    <div class="flex flex-col items-center select-none">
+      <div id="privacy-clock" class="clock-time text-[140px] leading-none font-headline font-light text-on-surface">09:42</div>
+      <div id="privacy-date" class="mt-4 text-base font-light text-on-surface-variant tracking-wide">Sunday, May 3</div>
+    </div>
+
+    <!-- Bottom hint -->
+    <div class="absolute bottom-8 left-0 right-0 flex justify-center">
+      <div class="flex items-center gap-2 text-[11px] font-label text-outline-variant">
+        <span class="material-symbols-outlined text-sm">shield</span>
+        <span>Privacy Mode is on</span>
+        <span class="opacity-50">·</span>
+        <span>Press
+          <kbd class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant text-[10px] mx-0.5">Ctrl</kbd>+<kbd class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant text-[10px] mx-0.5">Shift</kbd>+<kbd class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant text-[10px] mx-0.5">H</kbd>
+          to exit
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function switchState(state) {
+      document.querySelectorAll('.state-tab').forEach(t => t.classList.toggle('active', t.dataset.state === state));
+      document.getElementById('privacy-cover').classList.toggle('on', state === 'on');
+    }
+
+    // Keyboard shortcut: Ctrl+Shift+H toggles
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && (e.key === 'H' || e.key === 'h')) {
+        e.preventDefault();
+        const isOn = document.getElementById('privacy-cover').classList.contains('on');
+        switchState(isOn ? 'off' : 'on');
+      }
+    });
+
+    // Live clock
+    function tick() {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('privacy-clock').textContent = `${hh}:${mm}`;
+      const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      document.getElementById('privacy-date').textContent = `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;
+    }
+    tick();
+    setInterval(tick, 10_000);
+  </script>
+</body>
+</html>
